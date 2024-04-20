@@ -27,7 +27,7 @@ def get_element_screen_pos(driver, element, ratio=1.0):
     element_location = element.location
     # 获取浏览器窗口的位置
     window_location = driver.get_window_rect()
-    window_width = window_location['width']
+    # window_width = window_location['width']
     window_height = window_location['height']
 
     # 获取浏览器视窗（viewport）的大小
@@ -35,7 +35,7 @@ def get_element_screen_pos(driver, element, ratio=1.0):
     viewport_height = driver.execute_script("return window.innerHeight;")
 
     # 计算工具栏和边框的大致尺寸
-    toolbar_border_width = window_width - viewport_width
+    # toolbar_border_width = window_width - viewport_width
     toolbar_border_height = window_height - viewport_height
 
     # 计算屏幕坐标
@@ -66,7 +66,7 @@ driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {'source': 'Obje
 })
 
 logger.info("正在打开网页...({})".format(fill_form_num))
-file_path = 'C:/Users/12990/Desktop/广南县坝美镇乡村旅游对农户生计资本影响的研究.html'
+file_path = 'E:/Projects/AutoFillForm/selenium_pyautogui_V2/docs/广南县坝美镇乡村旅游对农户生计资本影响的研究.html'
 local_url = f"file:///{file_path.replace(os.path.sep, '/')}"
 # 打开目标网页
 driver.get(local_url)

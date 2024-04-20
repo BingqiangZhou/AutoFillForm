@@ -19,6 +19,7 @@ import pyautogui
 import threading
 import msvcrt
 import logging
+import sys
 import os
 
 # 配置日志
@@ -132,12 +133,42 @@ def switch_window_to_edge(window_title, sleep_time=2):
 def switch_window_by_driver(driver):
     driver.execute_script("window.focus();")
 
-logger.info("选择并读取yaml配置文件")
-# Get the path of the current script
-script_path = os.path.abspath(__file__)
+def intelligent_verification(driver, element, ratio):
+    # 获取智能验证文本对应的屏幕坐标，后续使用pyautogui自动移动鼠标来点击智能验证
+    screen_x, screen_y = get_element_screen_pos(driver, element, ratio)
 
-# Get the directory containing the script
-script_dir = os.path.dirname(script_path)
+    # switch_window_by_driver(driver)
+    # click_pos = (screen_x + random.randint(0, int(element.size["width"] * ratio / 2 )), 
+    #                  screen_y + random.randint(0, int(element.size["height"] * ratio / 2)))
+    click_pos = (screen_x, screen_y)
+    pyautogui.click(click_pos)
+    logger.info(f"智能验证...x:{click_pos[0]}, y:{click_pos[1]}")
+
+def slider_verification(driver, element_slide, ratio):
+    # 获取滑块文本对应的屏幕坐标，后续使用pyautogui自动移动鼠标来点击智能验证
+    screen_x, screen_y = get_element_screen_pos(driver, element_slide, ratio)
+
+    btn_slide_element = driver.find_element(By.CLASS_NAME, "btn_slide")
+    btn_slide_width = btn_slide_element.size["width"] * ratio / 2
+
+    # 在点击智能验证之前先切换到问卷对应的窗口            
+    # switch_window_by_driver(driver)
+    # pyautogui.click((screen_x, screen_y))
+    element_slide_size = element_slide.size
+    pyautogui.moveTo((screen_x + btn_slide_width, screen_y))
+    pyautogui.mouseDown()
+    pyautogui.dragTo(screen_x + btn_slide_width + element_slide_size["width"]*ratio, screen_y, duration=0.5)
+    pyautogui.mouseUp()
+    logger.info(f"滑块验证...x:{screen_x}, y:{screen_y}, element_slide_width:{element_slide_size["width"] * ratio}, btn_slide_width:{btn_slide_width*2}")
+
+logger.info("选择并读取yaml配置文件")
+
+if getattr(sys, 'frozen', False):
+    # The application is frozen using a bundling tool like PyInstaller
+    script_dir = os.path.dirname(sys.executable)
+else:
+    # Normal execution
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 rules_path = os.path.join(script_dir, "rules")
 config_dict = read_data_from_yaml_file(rules_path)
 logger.info(f"成功读取yaml配置文件，内容如下\n{config_dict}")
@@ -203,53 +234,35 @@ def fill_form():
                 element = driver.find_element(By.CLASS_NAME, "sm-txt")
                 # element_slide = driver.find_element(By.XPATH, "//span[contains(text(), '请按住滑块，拖动到最右边')]")
                 if element.text == "点击按钮开始智能验证":
-                    logger.info(f"智能验证...({fill_form_num})")
-                    # 获取智能验证文本对应的屏幕坐标，后续使用pyautogui自动移动鼠标来点击智能验证
-                    screen_x, screen_y = get_element_screen_pos(driver, element, ratio)
-
                     # 在点击智能验证之前先切换到问卷对应的窗口            
                     switch_window_to_edge(window_title)
-                    # switch_window_by_driver(driver)
-                    click_pos = (screen_x + random.randint(0, int(element.size["width"] * ratio / 2 )), 
-                                     screen_y + random.randint(0, int(element.size["height"] * ratio / 2)))
-                    click_pos = (screen_x, screen_y)
-                    pyautogui.click(click_pos)
-                    logger.info(f"智能验证...x:{click_pos[0]}, y:{click_pos[1]}({fill_form_num})")
-                    time.sleep(2) # 等2秒，看表单是否已经提交，表单已提交，则URL会改变
-                    # 如果链接没有改变说明触发了智能验证
-                    if url_has_changed(url)(driver) is False:
-                        element_slide = driver.find_element(By.XPATH, "//span[contains(text(), '请按住滑块，拖动到最右边')]")
-                        if element_slide is not None:
-                            # 获取智能验证文本对应的屏幕坐标，后续使用pyautogui自动移动鼠标来点击智能验证
-                            screen_x, screen_y = get_element_screen_pos(driver, element_slide, ratio)
-                            # 在点击智能验证之前先切换到问卷对应的窗口            
-                            switch_window_to_edge(window_title)
-                            # switch_window_by_driver(driver)
-                            # pyautogui.click((screen_x, screen_y))
-                            pyautogui.moveTo((screen_x+30, screen_y))
-                            pyautogui.mouseDown()
-                            pyautogui.dragTo(screen_x + element_slide.size["width"]*ratio, screen_y, duration=0.5)
-                            pyautogui.mouseUp()
-                            logger.info("滑块验证...({})".format(fill_form_num))
-                            WebDriverWait(driver, 10).until(url_has_changed(url))
-                        else:
-                            logger.error("元素不存在，代码可能有点问题\n")
-                            exit_flag = True # 退出循环
-                            break
+                    logger.info(f"智能验证...({fill_form_num})")
+                    intelligent_verification(driver, element, ratio)
+                    # time.sleep(2) # 等2秒，看表单是否已经提交，表单已提交，则URL会改变
+                    try:
+                        WebDriverWait(driver, 5).until(url_has_changed(url))
+                    except Exception as e:
+                        # 如果链接没有改变说明触发了智能验证
+                        if url_has_changed(url)(driver) is False:
+                            element_slide = driver.find_element(By.XPATH, "//span[contains(text(), '请按住滑块，拖动到最右边')]")
+                            if element_slide is not None:
+                                switch_window_to_edge(window_title)
+                                logger.info("滑块验证...({})".format(fill_form_num))
+                                slider_verification(driver, element_slide, ratio)
+                                WebDriverWait(driver, 10).until(url_has_changed(url))
+                            else:
+                                logger.error("元素不存在，代码可能有点问题\n")
+                                exit_flag = True # 退出循环
+                                break
                 else:
                     element_slide = driver.find_element(By.XPATH, "//span[contains(text(), '请按住滑块，拖动到最右边')]")
                     if element_slide is not None:
-                        # 获取智能验证文本对应的屏幕坐标，后续使用pyautogui自动移动鼠标来点击智能验证
-                        screen_x, screen_y = get_element_screen_pos(driver, element_slide, ratio)
-                        # 在点击智能验证之前先切换到问卷对应的窗口            
+                        # 在点击滑块验证之前先切换到问卷对应的窗口            
                         switch_window_to_edge(window_title)
-                        # switch_window_by_driver(driver)
-                        # pyautogui.click((screen_x, screen_y))
-                        pyautogui.moveTo((screen_x+30, screen_y))
-                        pyautogui.mouseDown()
-                        pyautogui.dragTo(screen_x + element_slide.size["width"]*ratio, screen_y, duration=0.5)
-                        pyautogui.mouseUp()
+                        
                         logger.info("滑块验证...({})".format(fill_form_num))
+                        slider_verification(driver, element_slide, ratio)
+
                         WebDriverWait(driver, 10).until(url_has_changed(url))
                     else:
                         logger.error("元素不存在，代码可能有点问题\n")
