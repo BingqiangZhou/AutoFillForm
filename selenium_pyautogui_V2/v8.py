@@ -1,5 +1,4 @@
 
-
 from tools.read_list_data_from_file import read_data_from_yaml_file
 from tools.url_change_judge import url_has_changed
 from tools.windows_resolution import get_windows_scale_ratio
@@ -48,6 +47,7 @@ def radio_selection(driver, probabilities, question_index):
 
 # 多选问题
 def multiple_selection(driver, probabilities, question_index):
+    select_option_num = 0
     for i, prob in enumerate(probabilities):
         if random.randint(1, 100) <= prob:
             option_id = f'q{question_index}_{i + 1}'
@@ -55,6 +55,17 @@ def multiple_selection(driver, probabilities, question_index):
             css = f"#{option_id} + a.jqcheck" # 找到id为{option_id}元素，找到为class为jqradio的兄弟a标签
             option = driver.find_element(By.CSS_SELECTOR, css)
             option.click()
+            select_option_num += 1
+    # 随机时没有选择任何选项，取概率最大的选择，有多个则取第一个
+    if select_option_num == 0:
+        max_value = max(probabilities)
+        # Get the index of the maximum value
+        max_index = probabilities.index(max_value)
+        option_id = f'q{question_index}_{max_index + 1}'
+        # css = f"a[rel='{option_id}']"
+        css = f"#{option_id} + a.jqcheck" # 找到id为{option_id}元素，找到为class为jqradio的兄弟a标签
+        option = driver.find_element(By.CSS_SELECTOR, css)
+        option.click()
 
 def matrix_radio_selection(driver, probabilities_list, question_index):
     for i, probabilities in enumerate(probabilities_list):
@@ -190,20 +201,60 @@ def fill_form():
             if url_has_changed(url)(driver) is False:
                 # 找到智能验证的文本对应的标签元素
                 element = driver.find_element(By.CLASS_NAME, "sm-txt")
-                if element is not None:
+                # element_slide = driver.find_element(By.XPATH, "//span[contains(text(), '请按住滑块，拖动到最右边')]")
+                if element.text == "点击按钮开始智能验证":
+                    logger.info(f"智能验证...({fill_form_num})")
                     # 获取智能验证文本对应的屏幕坐标，后续使用pyautogui自动移动鼠标来点击智能验证
                     screen_x, screen_y = get_element_screen_pos(driver, element, ratio)
 
                     # 在点击智能验证之前先切换到问卷对应的窗口            
                     switch_window_to_edge(window_title)
                     # switch_window_by_driver(driver)
-                    pyautogui.click((screen_x, screen_y))
-                    logger.info("智能验证...({})".format(fill_form_num))
-                    WebDriverWait(driver, 10).until(url_has_changed(url))
+                    click_pos = (screen_x + random.randint(0, int(element.size["width"] * ratio / 2 )), 
+                                     screen_y + random.randint(0, int(element.size["height"] * ratio / 2)))
+                    click_pos = (screen_x, screen_y)
+                    pyautogui.click(click_pos)
+                    logger.info(f"智能验证...x:{click_pos[0]}, y:{click_pos[1]}({fill_form_num})")
+                    time.sleep(2) # 等2秒，看表单是否已经提交，表单已提交，则URL会改变
+                    # 如果链接没有改变说明触发了智能验证
+                    if url_has_changed(url)(driver) is False:
+                        element_slide = driver.find_element(By.XPATH, "//span[contains(text(), '请按住滑块，拖动到最右边')]")
+                        if element_slide is not None:
+                            # 获取智能验证文本对应的屏幕坐标，后续使用pyautogui自动移动鼠标来点击智能验证
+                            screen_x, screen_y = get_element_screen_pos(driver, element_slide, ratio)
+                            # 在点击智能验证之前先切换到问卷对应的窗口            
+                            switch_window_to_edge(window_title)
+                            # switch_window_by_driver(driver)
+                            # pyautogui.click((screen_x, screen_y))
+                            pyautogui.moveTo((screen_x+30, screen_y))
+                            pyautogui.mouseDown()
+                            pyautogui.dragTo(screen_x + element_slide.size["width"]*ratio, screen_y, duration=0.5)
+                            pyautogui.mouseUp()
+                            logger.info("滑块验证...({})".format(fill_form_num))
+                            WebDriverWait(driver, 10).until(url_has_changed(url))
+                        else:
+                            logger.error("元素不存在，代码可能有点问题\n")
+                            exit_flag = True # 退出循环
+                            break
                 else:
-                    logger.error("元素不存在，代码可能有点问题\n")
-                    exit_flag = True # 退出循环
-                    break
+                    element_slide = driver.find_element(By.XPATH, "//span[contains(text(), '请按住滑块，拖动到最右边')]")
+                    if element_slide is not None:
+                        # 获取智能验证文本对应的屏幕坐标，后续使用pyautogui自动移动鼠标来点击智能验证
+                        screen_x, screen_y = get_element_screen_pos(driver, element_slide, ratio)
+                        # 在点击智能验证之前先切换到问卷对应的窗口            
+                        switch_window_to_edge(window_title)
+                        # switch_window_by_driver(driver)
+                        # pyautogui.click((screen_x, screen_y))
+                        pyautogui.moveTo((screen_x+30, screen_y))
+                        pyautogui.mouseDown()
+                        pyautogui.dragTo(screen_x + element_slide.size["width"]*ratio, screen_y, duration=0.5)
+                        pyautogui.mouseUp()
+                        logger.info("滑块验证...({})".format(fill_form_num))
+                        WebDriverWait(driver, 10).until(url_has_changed(url))
+                    else:
+                        logger.error("元素不存在，代码可能有点问题\n")
+                        exit_flag = True # 退出循环
+                        break
             
             fill_form_num += 1
 
