@@ -87,10 +87,17 @@ if element is not None:
         if element_slide is not None:
             # 获取智能验证文本对应的屏幕坐标，后续使用pyautogui自动移动鼠标来点击智能验证
             screen_x, screen_y = get_element_screen_pos(driver, element_slide, ratio)
+            btn_slide_element = driver.find_element(By.CLASS_NAME, "btn_slide")
+            btn_slide_width = btn_slide_element.size["width"] * ratio / 2
+
+            # 在点击智能验证之前先切换到问卷对应的窗口            
             # switch_window_by_driver(driver)
             # pyautogui.click((screen_x, screen_y))
-            pyautogui.moveTo((screen_x, screen_y))
-            pyautogui.dragTo(screen_x + element_slide.size["width"]*ratio, screen_y, duration=0.5)
+            element_slide_size = element_slide.size
+            pyautogui.moveTo((screen_x + btn_slide_width, screen_y))
+            pyautogui.mouseDown()
+            pyautogui.dragTo(screen_x + btn_slide_width + element_slide_size["width"]*ratio, screen_y, duration=0.5)
+            pyautogui.mouseUp()
             logger.info("智能验证...({})".format(fill_form_num))
         else:
             logger.error("元素不存在，代码可能有点问题\n")

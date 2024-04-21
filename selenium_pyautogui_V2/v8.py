@@ -23,8 +23,22 @@ import sys
 import os
 
 # 配置日志
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger()
+# Create a logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)  # Set the logger's level
+# Create a file handler
+file_handler = logging.FileHandler('app.log')
+file_handler.setLevel(logging.INFO)
+file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(file_format)
+# Create a console handler
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(console_format)
+# Add both handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
 
 
 # 单选问题
@@ -154,12 +168,12 @@ def slider_verification(driver, element_slide, ratio):
     # 在点击智能验证之前先切换到问卷对应的窗口            
     # switch_window_by_driver(driver)
     # pyautogui.click((screen_x, screen_y))
-    element_slide_size = element_slide.size
+    element_slide_width = element_slide.size["width"] * ratio
     pyautogui.moveTo((screen_x + btn_slide_width, screen_y))
     pyautogui.mouseDown()
-    pyautogui.dragTo(screen_x + btn_slide_width + element_slide_size["width"]*ratio, screen_y, duration=0.5)
+    pyautogui.dragTo(screen_x + btn_slide_width + element_slide_width, screen_y, duration=0.5)
     pyautogui.mouseUp()
-    logger.info(f"滑块验证...x:{screen_x}, y:{screen_y}, element_slide_width:{element_slide_size["width"] * ratio}, btn_slide_width:{btn_slide_width*2}")
+    logger.info(f"滑块验证...x:{screen_x}, y:{screen_y}, element_slide_width:{element_slide_width}, btn_slide_width:{btn_slide_width*2}")
 
 logger.info("选择并读取yaml配置文件")
 
@@ -175,7 +189,7 @@ logger.info(f"成功读取yaml配置文件，内容如下\n{config_dict}")
 question_infos = config_dict["rules"]
 
 # 问卷链接
-url = config_dict["url"]
+url = config_dict["url"].strip()
 
 # print(url, question_infos)
 
@@ -230,6 +244,7 @@ def fill_form():
 
             # 如果链接没有改变说明触发了智能验证
             if url_has_changed(url)(driver) is False:
+                logger.info("触发了验证...({})".format(fill_form_num))
                 # 找到智能验证的文本对应的标签元素
                 element = driver.find_element(By.CLASS_NAME, "sm-txt")
                 # element_slide = driver.find_element(By.XPATH, "//span[contains(text(), '请按住滑块，拖动到最右边')]")
@@ -241,7 +256,7 @@ def fill_form():
                     # time.sleep(2) # 等2秒，看表单是否已经提交，表单已提交，则URL会改变
                     try:
                         WebDriverWait(driver, 5).until(url_has_changed(url))
-                    except Exception as e:
+                    except TimeoutError as e:
                         # 如果链接没有改变说明触发了智能验证
                         if url_has_changed(url)(driver) is False:
                             element_slide = driver.find_element(By.XPATH, "//span[contains(text(), '请按住滑块，拖动到最右边')]")
@@ -254,6 +269,10 @@ def fill_form():
                                 logger.error("元素不存在，代码可能有点问题\n")
                                 exit_flag = True # 退出循环
                                 break
+                    except Exception as e:
+                        logger.error("元素不存在，代码可能有点问题\n")
+                        exit_flag = True # 退出循环
+                        break
                 else:
                     element_slide = driver.find_element(By.XPATH, "//span[contains(text(), '请按住滑块，拖动到最右边')]")
                     if element_slide is not None:
@@ -277,7 +296,8 @@ def fill_form():
     except Exception as e:
         exit_flag = True # 退出循环
         logger.error(e.with_traceback())
-        logger.error("程序出错，异常结束...")
+        logger.error("程序出错，异常结束...,30秒后退出程序")
+        time.sleep(30)
 
 def listen_for_exit():
     global exit_flag
