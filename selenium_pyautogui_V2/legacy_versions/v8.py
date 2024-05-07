@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.edge.service import Service as EdgeService
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 import random
 import time
 import pyautogui
@@ -256,7 +257,7 @@ def fill_form():
                     # time.sleep(2) # 等2秒，看表单是否已经提交，表单已提交，则URL会改变
                     try:
                         WebDriverWait(driver, 5).until(url_has_changed(url))
-                    except TimeoutError as e:
+                    except TimeoutException as e:
                         # 如果链接没有改变说明触发了智能验证
                         if url_has_changed(url)(driver) is False:
                             element_slide = driver.find_element(By.XPATH, "//span[contains(text(), '请按住滑块，拖动到最右边')]")

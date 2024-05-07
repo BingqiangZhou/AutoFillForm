@@ -15,7 +15,11 @@
 
 ## 第三版
 
-- v8：支持滑动验证。优化多选随机选择逻辑，修复多选所有选项随机到不选择时流程出错的问题。
+- v8：
+  - 支持滑动验证。
+  - 优化多选随机选择逻辑，修复多选所有选项随机到不选择时流程出错的问题。
+  - 修复配置文件中url带有空格，无法进去智能验证步骤的问题。
+  - （v8_2.py）出现错误时，保存页面为mhtml文件，参考链接：[利用selenium保存静态网页 - 简书](https://www.jianshu.com/p/29a0adc044d5)、[模拟按下某快捷键：keybd_event使用方法 - DBing - 博客园](https://www.cnblogs.com/shenbing/p/5964675.html)
 
 ## TODO：
 
@@ -30,3 +34,5 @@
 - [ImportError : Attempted relative import with no known parent package [duplicate] - stackoverflow](https://stackoverflow.com/questions/60593604/importerror-attempted-relative-import-with-no-known-parent-package)
 - [【Python】获取屏幕真实分辨率、缩放后的分辨率以及缩放比例 - csdn](https://blog.csdn.net/frostime/article/details/104798061)
 - [Locating Elements - selenium-python.readthedocs.io](https://selenium-python.readthedocs.io/locating-elements.html)
+- [利用selenium保存静态网页 - 简书](https://www.jianshu.com/p/29a0adc044d5)
+- [模拟按下某快捷键：keybd_event使用方法 - DBing - 博客园](https://www.cnblogs.com/shenbing/p/5964675.html)
