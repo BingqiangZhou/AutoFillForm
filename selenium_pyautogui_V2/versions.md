@@ -21,6 +21,12 @@
   - 修复配置文件中url带有空格，无法进去智能验证步骤的问题。
   - （v8_2.py）出现错误时，保存页面为mhtml文件，参考链接：[利用selenium保存静态网页 - 简书](https://www.jianshu.com/p/29a0adc044d5)、[模拟按下某快捷键：keybd_event使用方法 - DBing - 博客园](https://www.cnblogs.com/shenbing/p/5964675.html)
 
+## 第四版
+
+- v9:
+  - 支持设定自动填写问卷份数
+  - 支持填空题填写
+
 ## TODO：
 
 - 暂停时间也放在配置文件里

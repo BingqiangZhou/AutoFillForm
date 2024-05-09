@@ -1,0 +1,25 @@
+url: "https://www.wjx.cn/vm/t68bEsH.aspx"
+number_of_questionnaires_to_be_filled_out: 5
+rules:
+  - radio_selection: [50, 50]  # 问题1：单选
+  - radio_selection: [25, 25, 25, 25]  # 问题2：单选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题3：单选
+  - radio_selection: [25, 25, 25, 25]  # 问题4：单选
+  - radio_selection: [25, 25, 25, 25]  # 问题5：单选
+  - multiple_selection: [50, 50, 50, 50, 50]  # 问题6：多选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题7：单选
+  - radio_selection: [25, 25, 25, 25]  # 问题8：单选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题9：单选
+  - multiple_selection: [50, 50, 50, 50, 50, 50, 50]  # 问题10：多选
+  - multiple_selection: [50, 50, 50, 50, 0]  # 问题11：多选
+  - multiple_selection: [50, 50, 50, 50, 0]  # 问题12：多选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题13：单选
+  - radio_selection: [25, 25, 25, 25]  # 问题14：单选
+  - radio_selection: [50, 50]  # 问题15：单选
+  - radio_selection: [50, 50]  # 问题16：单选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题17：单选
+  - multiple_selection: [50, 50, 50, 50, 50, 50]  # 问题18：多选
+  - blank_filling: [["无", "没有"], [50, 50]]  # 问题19：填空题
+  - blank_filling: [["挺好", "还不错"], [50, 50]]  # 问题20：填空题
+
+  
