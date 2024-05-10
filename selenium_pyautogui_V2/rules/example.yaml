@@ -1,4 +1,5 @@
 url: "https://www.wjx.cn/vm/O9qR" # 不可访问，仅用于作为示例
+number_of_questionnaires_to_be_filled_out: 5
 rules:
   - radio_selection: [25, 25, 25, 25]  # 问题1：单选，4个选项中随机
   - radio_selection: [50, 50]  # 问题2：单选，2个选项中随机

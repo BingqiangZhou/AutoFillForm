@@ -1,4 +1,5 @@
 url: https://www.wjx.cn/vm/YtzNZOS.aspx
+number_of_questionnaires_to_be_filled_out: 5
 rules:
     - radio_selection: [50, 150, 210, 380, 175, 35]
     - radio_selection: [53, 47]
