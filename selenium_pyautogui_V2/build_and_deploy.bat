@@ -19,7 +19,7 @@ set SCRIPT_NAME=%~2
 cd /d E:\Projects\AutoFillForm\selenium_pyautogui_V2
 
 :: 使用 PyInstaller 构建项目
-pyinstaller --onefile --name %VERSION_NAME% --distpath=./releases/%VERSION_NAME%/dist --workpath=./releases/%VERSION_NAME%/build --specpath=./releases/%VERSION_NAME%  %SCRIPT_NAME%
+pyinstaller --onefile --name %VERSION_NAME% --distpath=./releases/%VERSION_NAME%/dist --workpath=./releases/%VERSION_NAME%/build --specpath=./releases/%VERSION_NAME% --key BingqiangZhou %SCRIPT_NAME%
 
 echo Build complete.
 
