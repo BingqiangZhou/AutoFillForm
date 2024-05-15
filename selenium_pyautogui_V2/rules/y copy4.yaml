@@ -1,5 +1,5 @@
 url: "https://www.wjx.cn/vm/t68bEsH.aspx"
-number_of_questionnaires_to_be_filled_out: 5
+number_of_questionnaires_to_be_filled_out: 150
 rules:
   - radio_selection: [50, 50]  # 问题1：单选
   - radio_selection: [25, 25, 25, 25]  # 问题2：单选
