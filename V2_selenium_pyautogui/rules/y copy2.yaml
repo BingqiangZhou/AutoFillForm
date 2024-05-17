@@ -1,0 +1,18 @@
+url: "https://www.wjx.cn/vm/YtOzaLQ.aspx#"
+rules:
+  - radio_selection: [50, 50]  # 问题1：单选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题2：单选
+  - radio_selection: [25, 25, 25, 25]  # 问题3：单选
+  - radio_selection: [25, 25, 25, 25]  # 问题4：单选
+  - radio_selection: [25, 25, 25, 25]  # 问题5：单选
+  - multiple_selection: [50, 50, 50, 0]  # 问题6：多选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题7：单选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题8：单选
+  - radio_selection: [50, 50]  # 问题9：单选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题10：单选
+  - radio_selection: [16, 16, 17, 17, 17, 17]  # 问题11：单选
+  - radio_selection: [16, 16, 17, 17, 17, 17]  # 问题12：单选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题13：单选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题14：单选
+  - radio_selection: [20, 20, 20, 20, 20]  # 问题15：单选
+  
