@@ -4,3 +4,7 @@ docs/
 
 
 *.log
+*.mp4
+*.zip
+*.exe
+*.pyc

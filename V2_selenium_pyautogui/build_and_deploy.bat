@@ -16,7 +16,7 @@ set VERSION_NAME=%~1
 set SCRIPT_NAME=%~2
 
 :: 切换到项目目录
-cd /d E:\Projects\AutoFillForm\selenium_pyautogui_V2
+cd /d E:\Projects\AutoFillForm\V2_selenium_pyautogui
 
 :: 使用 PyInstaller 构建项目
 pyinstaller --onefile --name %VERSION_NAME% --distpath=./releases/%VERSION_NAME%/dist --workpath=./releases/%VERSION_NAME%/build --specpath=./releases/%VERSION_NAME% %SCRIPT_NAME%
