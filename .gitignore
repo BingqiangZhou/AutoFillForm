@@ -1,7 +1,9 @@
 
 releases/
-docs/
+# docs/
 
+chromedriver-win64/
+python-exe-unpacker/
 
 *.log
 *.mp4
