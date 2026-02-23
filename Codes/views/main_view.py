@@ -11,12 +11,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import version as version_info
 
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
-                              QStatusBar, QLabel, QPushButton, QTextEdit,
+                              QStatusBar, QLabel, QPushButton, QTextBrowser,
                               QProgressBar, QFileDialog, QMessageBox,
                               QScrollArea)
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QPalette
 
 from utils.updater import UpdateChecker
+from utils.markdown_renderer import MarkdownRenderer
 
 
 class MainView(QWidget):
@@ -114,11 +116,12 @@ class MainView(QWidget):
         layout.addLayout(check_row)
 
         # Release notes area (hidden by default)
-        self._notes_edit = QTextEdit()
-        self._notes_edit.setReadOnly(True)
-        self._notes_edit.setVisible(False)
-        self._notes_edit.setMaximumHeight(200)
-        layout.addWidget(self._notes_edit)
+        self._notes_browser = QTextBrowser()
+        self._notes_browser.setReadOnly(True)
+        self._notes_browser.setOpenExternalLinks(True)  # Support clicking links
+        self._notes_browser.setVisible(False)
+        self._notes_browser.setMaximumHeight(200)
+        layout.addWidget(self._notes_browser)
 
         # Download row (hidden by default)
         self._download_row = QWidget()
@@ -182,7 +185,7 @@ class MainView(QWidget):
     def _on_check_update(self):
         self._check_btn.setEnabled(False)
         self._version_label.setText("正在检查更新...")
-        self._notes_edit.setVisible(False)
+        self._notes_browser.setVisible(False)
         self._download_row.setVisible(False)
         self._progress_bar.setVisible(False)
         self._updater.check()
@@ -195,11 +198,23 @@ class MainView(QWidget):
             self._version_label.setText(
                 f"<b>发现新版本: {info['latest_version']}</b>  (当前: v{info['current_version']})"
             )
-            # Show release notes
+            # Show release notes with Markdown rendering
             body = info.get("body", "")
             if body:
-                self._notes_edit.setPlainText(body)
-                self._notes_edit.setVisible(True)
+                # Get colors from Qt palette
+                palette = self._notes_browser.palette()
+                text_color = palette.color(QPalette.ColorRole.Text).name()
+                bg_color = palette.color(QPalette.ColorRole.Base).name()
+                link_color = palette.color(QPalette.ColorRole.Link).name()
+
+                renderer = MarkdownRenderer(
+                    text_color=text_color,
+                    background_color=bg_color,
+                    link_color=link_color
+                )
+                html_content = renderer.render(body)
+                self._notes_browser.setHtml(html_content)
+                self._notes_browser.setVisible(True)
             # Show download row
             if info.get("asset_url"):
                 self._download_btn.setText(f"下载 {info['asset_name']}")
