@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [5.0.3](https://github.com/BingqiangZhou/AutoFillForm/compare/v5.0.2...v5.0.3) - 2026-02-23 ([📥](https://github.com/BingqiangZhou/AutoFillForm/releases/tag/v5.0.3))
+
+### 🎨 Styling
+
+- *(views)* Align tree widget headers to center in history and workflow views ([9c734ec](https://github.com/BingqiangZhou/AutoFillForm/commit/9c734ec9eaf517569dc402688bcfa7d29ea991f5))
+
+### 🐛 Bug Fixes
+
+- *(automation)* Properly manage Playwright instance lifecycle to prevent resource leaks ([1ae87f7](https://github.com/BingqiangZhou/AutoFillForm/commit/1ae87f7445609e9ec4f9f1080927b1699cd0d362))
+
+
+
 ## [5.0.2](https://github.com/BingqiangZhou/AutoFillForm/compare/v5.0.1...v5.0.2) - 2026-02-23 ([📥](https://github.com/BingqiangZhou/AutoFillForm/releases/tag/v5.0.2))
 
 ### 🐛 Bug Fixes
@@ -11,6 +23,13 @@ All notable changes to this project will be documented in this file.
 - *(ci)* Replace deprecated macos-create-app-bundle with macos-app-mode ([3ddfe19](https://github.com/BingqiangZhou/AutoFillForm/commit/3ddfe1978b82c8f193e5d13b6d2432ae5010f560))
 - *(ci)* Resolve Playwright node binary conflict on Linux and macOS ([aa98ae0](https://github.com/BingqiangZhou/AutoFillForm/commit/aa98ae0fd7335daec811bd101f1d55aa22c711a1))
 - *(ci)* Use --mode=app for macOS Nuitka build to resolve Foundation error ([f3f64b7](https://github.com/BingqiangZhou/AutoFillForm/commit/f3f64b7173843fd62342757f20a8c9cbe8adb0f6))
+- *(ci)* Specify macOS app bundle name in Nuitka build configuration ([f2cbede](https://github.com/BingqiangZhou/AutoFillForm/commit/f2cbede0c6ee4bf23c8361840c9486f04ac1df6e))
+- *(ci)* Use underscore format for macOS Nuitka parameters ([5c04f6d](https://github.com/BingqiangZhou/AutoFillForm/commit/5c04f6d76c0a61b38a15c5c7e7adc8dd4fd325c2))
+- *(ci)* Add explicit rename step for macOS app bundle ([eec12fc](https://github.com/BingqiangZhou/AutoFillForm/commit/eec12fcd6f9c8a333a2cd55b3eed46f3e6689370))
+
+### 📚 Documentation
+
+- *(readme)* Add application interface preview screenshot ([63d25ee](https://github.com/BingqiangZhou/AutoFillForm/commit/63d25ee25d8e6130a2e464153e898a1a311e562a))
 
 ### 🚜 Refactor
 

@@ -1,6 +1,6 @@
 # AutoFillForm V5
 
-![Version](https://img.shields.io/badge/Version-5.0.2-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-5.0.3-brightgreen.svg)
 ![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)
 ![PySide6](https://img.shields.io/badge/PySide6-6.6.1-green.svg)
 ![Playwright](https://img.shields.io/badge/Playwright-1.40.0-orange.svg)
@@ -282,6 +282,12 @@ A: 可能原因：
 A: 目前部分验证码需要手动处理，程序会在需要时暂停等待用户操作。
 
 ## 版本历史
+
+### V5.0.3 (2026-02-24)
+
+**主要更新：**
+- [样式] 居中对齐历史和工作流视图的树形组件标题
+- [修复] 正确管理 Playwright 实例生命周期，防止资源泄漏
 
 ### V5.0.2 (2026-02-23)
 
