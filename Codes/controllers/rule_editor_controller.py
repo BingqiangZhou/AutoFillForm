@@ -27,7 +27,8 @@ class RuleEditorController:
     def setup_view_callbacks(self):
         """Set up view button callbacks."""
         self.view.set_button_command("new", self.new_rule)
-        self.view.set_button_command("open", self.open_rule)
+        # Use lambda to avoid clicked(bool) passing False as file_path
+        self.view.set_button_command("open", lambda checked=False: self.open_rule())
         self.view.set_button_command("save", self.save_rule)
         self.view.set_button_command("save_as", self.save_rule_as)
         self.view.set_button_command("validate", self.validate_rule)

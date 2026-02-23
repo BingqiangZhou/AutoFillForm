@@ -20,6 +20,12 @@ class HistoryView(QWidget):
             parent_widget: Parent widget to contain this view.
         """
         super().__init__(parent_widget)
+
+        # Ensure this widget fills the parent tab page
+        parent_layout = QVBoxLayout(parent_widget)
+        parent_layout.setContentsMargins(0, 0, 0, 0)
+        parent_layout.addWidget(self)
+
         self.setup_ui()
 
     def setup_ui(self):

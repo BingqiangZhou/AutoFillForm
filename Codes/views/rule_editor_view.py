@@ -195,7 +195,9 @@ class RuleEditorView:
 
     def set_content(self, content):
         """Set the editor content."""
+        self.editor.blockSignals(True)
         self.editor.setPlainText(content)
+        self.editor.blockSignals(False)
         self._modified = False
         self.modified_label.setText("")
 
@@ -212,6 +214,9 @@ class RuleEditorView:
 
     def open_file(self, file_path=None):
         """Open a file."""
+        if self._modified and not self.confirm_discard():
+            return False
+
         if not file_path:
             file_path, _ = QFileDialog.getOpenFileName(
                 self.widget,

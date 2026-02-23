@@ -5,7 +5,6 @@ Migrated from Selenium to Playwright.
 import threading
 import time
 from tools.url_change_judge import wait_for_url_change
-from tools.windows_resolution import get_windows_scale_ratio
 from automation.form_filler import FormFiller
 from automation.verification import VerificationHandler
 from automation.browser_setup import BrowserSetup
@@ -44,7 +43,8 @@ class FillController:
         # Setup view callbacks
         self.setup_view_callbacks()
 
-        # Get DPI ratio once at startup
+        # Get DPI ratio (lazy import to avoid win32 setting DPI awareness before Qt)
+        from tools.windows_resolution import get_windows_scale_ratio
         self.ratio = get_windows_scale_ratio()
 
     def setup_view_callbacks(self):
@@ -75,26 +75,7 @@ class FillController:
 
             # Also load the rule content into the rule editor for viewing/editing
             if self.rule_editor_controller:
-                import os
-                file_path = os.path.join(self.rule_model.get_rules_dir(), file_name)
-                self.logger.info(f"Loading rule content from: {file_path}")
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                    self.logger.info(f"Content length: {len(content)} chars, {len(content.splitlines())} lines")
-
-                    # Use the view's proper method to set content
-                    self.rule_editor_controller.view.set_content(content)
-
-                    # Update file info using internal attributes (needed for display)
-                    self.rule_editor_controller.view._current_file = file_path
-                    self.rule_editor_controller.view.file_label.setText(file_path)
-
-                    self.logger.info("Rule content loaded into editor successfully")
-                except Exception as e:
-                    import traceback
-                    self.logger.error(f"无法加载规则到编辑器: {e}")
-                    traceback.print_exc()
+                self.rule_editor_controller.load_rule_by_name(file_name)
 
             return True
         else:

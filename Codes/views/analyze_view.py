@@ -20,6 +20,12 @@ class AnalyzeView(QWidget):
             initial_link (str): Initial survey link.
         """
         super().__init__(parent_widget)
+
+        # Ensure this widget fills the parent tab page
+        parent_layout = QVBoxLayout(parent_widget)
+        parent_layout.setContentsMargins(0, 0, 0, 0)
+        parent_layout.addWidget(self)
+
         self.setup_ui(initial_link)
 
     def setup_ui(self, initial_link):
