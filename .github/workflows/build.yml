@@ -97,7 +97,7 @@ jobs:
           script-name: Codes/app.py
           mode: standalone
           enable-plugins: pyqt6
-          macos-create-app-bundle: true
+          macos-app-mode: gui
           include-data-dir: Codes/rules/=rules/
           include-package-data: playwright
           output-dir: build
