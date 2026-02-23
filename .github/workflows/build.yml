@@ -100,6 +100,7 @@ jobs:
           macos-app-mode: gui
           include-data-dir: Codes/rules/=rules/
           include-package-data: playwright
+          noinclude-data-files: "playwright/driver/node"
           output-dir: build
           output-file: AutoFillForm
           noinclude-setuptools-mode: nofollow
@@ -116,11 +117,25 @@ jobs:
           enable-plugins: pyqt6
           include-data-dir: Codes/rules/=rules/
           include-package-data: playwright
+          noinclude-data-files: "playwright/driver/node"
           output-dir: build
           output-file: AutoFillForm
           noinclude-setuptools-mode: nofollow
           noinclude-pytest-mode: nofollow
           noinclude-unittest-mode: nofollow
+
+      - name: Restore Playwright node binary (macOS / Linux)
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          DIST_DIR=$(find build -maxdepth 1 -type d -name "*.dist" | head -1)
+          if [ -z "$DIST_DIR" ]; then
+            DIST_DIR=$(find build -maxdepth 1 -type d ! -path build | head -1)
+          fi
+          PW_NODE=$(python -c "import playwright; import os; print(os.path.join(os.path.dirname(playwright.__file__), 'driver', 'node'))")
+          mkdir -p "$DIST_DIR/playwright/driver"
+          cp "$PW_NODE" "$DIST_DIR/playwright/driver/node"
+          chmod +x "$DIST_DIR/playwright/driver/node"
 
       # ── Package ───────────────────────────────────────────────────
 
