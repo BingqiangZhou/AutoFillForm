@@ -1,5 +1,5 @@
 """
-AutoFillForm V5 - Main Entry Point
+AutoFillForm - Main Entry Point
 
 Migrated from V4: Tkinter -> PyQt6, Selenium -> Playwright
 """
@@ -10,6 +10,9 @@ from PyQt6.QtCore import QSettings
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Import version from main package
+import version as version_info
 
 from models import SurveyModel, RuleModel, HistoryModel
 from views import MainView, WorkflowView, HistoryView
@@ -23,11 +26,11 @@ class AutoFillFormApp(QMainWindow):
     def __init__(self):
         """Initialize the application."""
         super().__init__()
-        self.setWindowTitle("AutoFillForm V5")
+        self.setWindowTitle(version_info.__fullname__)
         self.resize(900, 700)
 
         # QSettings for window geometry persistence
-        self.settings = QSettings("AutoFillForm", "V5")
+        self.settings = QSettings(version_info.__title__, version_info.__legacy_version__)
 
         # Get the script directory
         if getattr(sys, 'frozen', False):
@@ -84,10 +87,10 @@ class AutoFillFormApp(QMainWindow):
         )
 
         # Set initial status
-        self.main_view.set_status("就绪 - AutoFillForm V5")
+        self.main_view.set_status(f"就绪 - {version_info.__fullname__}")
 
         # Log application start
-        self.logger.info("AutoFillForm V5 启动")
+        self.logger.info(f"{version_info.__fullname__} 启动")
 
         # Load window geometry if saved
         self._load_window_geometry()

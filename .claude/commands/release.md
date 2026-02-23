@@ -18,17 +18,17 @@ example: /release 5.1.0
 2. 更新版本历史部分，添加新版本条目
 
 ## 步骤2: 更新版本号
-读取并更新 `Codes/app.py` 中的版本信息：
-- 文件位置: `E:\Projects\PythonTools\AutoFillForm\Codes\app.py`
-- 更新窗口标题中的版本号 (如果包含)
-- 在文档字符串中添加版本注释
+更新 `Codes/version.py` 中的版本信息：
+- 文件位置: `E:\Projects\PythonTools\AutoFillForm\Codes\version.py`
+- 更新 `__version__` 变量为新版本号 (例如: "5.1.0")
+- 所有其他文件会自动使用新版本号（已集中管理，无需修改其他文件）
 
 ## 步骤3: 创建提交
 创建 commit，message 格式为：
 ```
 chore(release): update version to <版本号> and generate changelog
 
-- Update version in app.py
+- Update version in version.py
 
 - Generate CHANGELOG.md for v<版本号>
 
@@ -50,7 +50,7 @@ chore(release): update version to <版本号> and generate changelog
   ```
   chore(release): update version to 5.1.0 and generate changelog
 
-  - Update version in app.py
+  - Update version in version.py
 
   - Generate CHANGELOG.md for v5.1.0
 

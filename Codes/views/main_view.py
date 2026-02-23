@@ -1,6 +1,13 @@
 """
 Main view with tabbed interface - Migrated to PyQt6.
 """
+import sys
+import os
+
+# Add parent directory to path for version import
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import version as version_info
+
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QTabWidget,
                              QStatusBar, QLabel)
 from PyQt6.QtCore import Qt
@@ -9,7 +16,7 @@ from PyQt6.QtCore import Qt
 class MainView(QWidget):
     """Main application window with tabbed interface using PyQt6."""
 
-    def __init__(self, main_window, title="AutoFillForm V5"):
+    def __init__(self, main_window, title=None):
         """
         Initialize the main view.
 
@@ -19,6 +26,10 @@ class MainView(QWidget):
         """
         super().__init__()
         self.main_window = main_window
+
+        # Set default title if not provided
+        if title is None:
+            title = version_info.__fullname__
 
         # Set up the central widget layout
         layout = QVBoxLayout(self)
@@ -50,7 +61,7 @@ class MainView(QWidget):
         layout.setContentsMargins(30, 30, 30, 30)
 
         about_text = QLabel(
-            "<h2>AutoFillForm V5</h2>"
+            f"<h2>{version_info.__fullname__}</h2>"
             "<p>自动填写问卷工具</p>"
             "<p>迁移自V4: Playwright + PyQt6</p>"
             "<hr>"
