@@ -97,8 +97,7 @@ jobs:
           script-name: Codes/app.py
           mode: app
           enable-plugins: pyside6
-          macos_app_mode: gui
-          macos_app_name: AutoFillForm
+          macos-app-mode: gui
           include-data-dir: Codes/rules/=rules/
           include-package-data: playwright
           noinclude-data-files: "playwright/driver/node"
@@ -107,6 +106,15 @@ jobs:
           noinclude-setuptools-mode: nofollow
           noinclude-pytest-mode: nofollow
           noinclude-unittest-mode: nofollow
+
+      - name: Rename .app bundle on macOS
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: |
+          if [ -d "build/app.app" ]; then
+            mv build/app.app build/AutoFillForm.app
+            echo "Renamed app.app to AutoFillForm.app"
+          fi
 
       - name: Build with Nuitka (Linux)
         if: matrix.platform == 'linux'
