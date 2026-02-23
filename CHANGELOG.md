@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [5.0.2](https://github.com/BingqiangZhou/AutoFillForm/compare/v5.0.1...v5.0.2) - 2026-02-23 ([📥](https://github.com/BingqiangZhou/AutoFillForm/releases/tag/v5.0.2))
+
+### 🐛 Bug Fixes
+
+- *(ci)* Replace deprecated macos-create-app-bundle with macos-app-mode ([3ddfe19](https://github.com/BingqiangZhou/AutoFillForm/commit/3ddfe1978b82c8f193e5d13b6d2432ae5010f560))
+- *(ci)* Resolve Playwright node binary conflict on Linux and macOS ([aa98ae0](https://github.com/BingqiangZhou/AutoFillForm/commit/aa98ae0fd7335daec811bd101f1d55aa22c711a1))
+- *(ci)* Use --mode=app for macOS Nuitka build to resolve Foundation error ([f3f64b7](https://github.com/BingqiangZhou/AutoFillForm/commit/f3f64b7173843fd62342757f20a8c9cbe8adb0f6))
+
+### 🚜 Refactor
+
+- *(views)* Migrate GUI framework from PyQt6 to PySide6 ([4820468](https://github.com/BingqiangZhou/AutoFillForm/commit/482046885899b3f6e06f795f5d0382a6eabc19db))
+
+
+
 ## [5.0.1](https://github.com/BingqiangZhou/AutoFillForm/compare/v5.0.0...v5.0.1) - 2026-02-23 ([📥](https://github.com/BingqiangZhou/AutoFillForm/releases/tag/v5.0.1))
 
 ### 🐛 Bug Fixes

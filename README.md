@@ -1,18 +1,18 @@
 # AutoFillForm V5
 
-![Version](https://img.shields.io/badge/Version-5.0.1-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-5.0.2-brightgreen.svg)
 ![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)
-![PyQt6](https://img.shields.io/badge/PyQt6-6.6.1-green.svg)
+![PySide6](https://img.shields.io/badge/PySide6-6.6.1-green.svg)
 ![Playwright](https://img.shields.io/badge/Playwright-1.40.0-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## 项目简介
 
-**AutoFillForm V5** 是一个基于 PyQt6 和 Playwright 的智能问卷自动填写工具。通过 YAML 配置文件，您可以灵活地定义问卷填写规则，支持多种题型（单选、多选、矩阵、填空、下拉框），并可根据概率权重智能选择答案。
+**AutoFillForm V5** 是一个基于 PySide6 和 Playwright 的智能问卷自动填写工具。通过 YAML 配置文件，您可以灵活地定义问卷填写规则，支持多种题型（单选、多选、矩阵、填空、下拉框），并可根据概率权重智能选择答案。
 
 ### 技术特色
 
-- **现代化架构**: 从 V4 升级，迁移至 PyQt6 + Playwright 技术栈
+- **现代化架构**: 从 V4 升级，迁移至 PySide6 + Playwright 技术栈
 - **MVC 设计模式**: 清晰的代码结构，易于维护和扩展
 - **YAML 配置**: 灵活的规则配置，支持概率权重
 - **多平台支持**: 支持问卷星、腾讯问卷、见数问卷、Qualtrics 等主流问卷平台
@@ -52,7 +52,7 @@
 
 | 组件 | 版本 | 用途 |
 |------|------|------|
-| PyQt6 | 6.6.1 | 图形界面框架 |
+| PySide6 | 6.6.1 | 图形界面框架 |
 | Playwright | 1.40.0 | 浏览器自动化 |
 | BeautifulSoup4 | 4.12.2 | HTML 解析 |
 | PyYAML | 6.0.1 | 配置文件解析 |
@@ -167,7 +167,7 @@ AutoFillForm/
 │   │   ├── main_controller.py
 │   │   ├── workflow_controller.py
 │   │   └── history_controller.py
-│   ├── views/                 # PyQt6 视图
+│   ├── views/                 # PySide6 视图
 │   │   ├── __init__.py
 │   │   ├── main_view.py
 │   │   ├── workflow_view.py
@@ -279,6 +279,14 @@ A: 目前部分验证码需要手动处理，程序会在需要时暂停等待�
 
 ## 版本历史
 
+### V5.0.2 (2026-02-23)
+
+**主要更新：**
+- [重构] 将 GUI 框架从 PyQt6 迁移至 PySide6，解决 macOS Nuitka 构建问题
+- [修复] macOS CI 构建 Nuitka 不支持 PyQt6 的 FATAL 错误
+- [修复] CI 构建使用 --mode=app 解决 macOS Foundation 错误
+- [修复] Linux/macOS Playwright node 二进制文件冲突
+
 ### V5.0.1 (2026-02-23)
 
 **主要更新：**
@@ -293,7 +301,7 @@ A: 目前部分验证码需要手动处理，程序会在需要时暂停等待�
 ### V5.0.0 (2025-02-23)
 
 **主要更新：**
-- [新增] 完全迁移至 PyQt6 框架，提升 UI 性能
+- [新增] 完全迁移至 PySide6 框架，提升 UI 性能
 - [新增] 使用 Playwright 替代 Selenium，提高稳定性
 - [新增] MVC 架构重构，代码更清晰
 - [新增] 会话恢复功能，支持中断后继续
