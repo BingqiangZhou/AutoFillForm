@@ -1,16 +1,13 @@
 """
-Survey analysis controller - V3 features enhanced.
+Survey analysis controller - Migrated to Playwright.
 """
 import threading
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from automation.browser_setup import BrowserSetup
 
 
 class AnalyzeController:
-    """Controller for survey analysis operations."""
+    """Controller for survey analysis operations using Playwright."""
 
     def __init__(self, model, view, rule_model):
         """
@@ -24,7 +21,9 @@ class AnalyzeController:
         self.model = model
         self.view = view
         self.rule_model = rule_model
-        self.driver = None
+        self.browser = None
+        self.context = None
+        self.page = None
 
         # Setup view callbacks
         self.setup_view_callbacks()
@@ -52,21 +51,21 @@ class AnalyzeController:
         thread.start()
 
     def _analyze_worker(self, link):
-        """Worker thread for survey analysis."""
+        """Worker thread for survey analysis with Playwright."""
         try:
             # Setup browser
-            if self.driver is None:
-                self.driver = BrowserSetup.setup_browser_for_analysis()
+            if self.page is None:
+                self.browser, self.context, self.page = BrowserSetup.setup_browser_for_analysis()
 
             # Open survey
-            self.driver.get(link)
-            WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.ID, 'divQuestion'))
-            )
+            self.page.goto(link, wait_until="domcontentloaded")
+
+            # Wait for question div to load
+            self.page.wait_for_selector('#divQuestion', timeout=10000)
 
             # Analyze
-            page_source = self.driver.page_source
-            results = self._analyze_survey_page(page_source)
+            page_content = self.page.content()
+            results = self._analyze_survey_page(page_content)
 
             # Update UI (must be on main thread)
             self.view.after(0, lambda: self.view.display_results(results))
@@ -75,9 +74,9 @@ class AnalyzeController:
             error_msg = f"分析问卷时出错: {e}"
             self.view.after(0, lambda: self.view.show_error("分析错误", error_msg))
 
-    def _analyze_survey_page(self, page_source):
+    def _analyze_survey_page(self, page_content):
         """Analyze the survey page structure."""
-        soup = BeautifulSoup(page_source, 'html.parser')
+        soup = BeautifulSoup(page_content, 'html.parser')
         form = soup.find('div', id='divQuestion')
 
         if not form:
@@ -229,9 +228,26 @@ class AnalyzeController:
 
     def cleanup(self):
         """Clean up resources."""
-        if self.driver:
-            self.driver.quit()
-            self.driver = None
+        if self.page:
+            try:
+                self.page.close()
+            except:
+                pass
+            self.page = None
+
+        if self.context:
+            try:
+                self.context.close()
+            except:
+                pass
+            self.context = None
+
+        if self.browser:
+            try:
+                self.browser.close()
+            except:
+                pass
+            self.browser = None
 
     def has_unsaved_changes(self):
         """Return False - analyze controller doesn't have persistent state."""

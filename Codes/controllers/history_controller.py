@@ -1,7 +1,8 @@
 """
 History controller - session history management.
+Migrated to PyQt6.
 """
-from tkinter import messagebox
+from PyQt6.QtWidgets import QMessageBox
 from datetime import datetime
 
 
@@ -24,8 +25,8 @@ class HistoryController:
         # Setup view callbacks
         self.setup_view_callbacks()
 
-        # Bind selection event
-        self.view.tree.bind("<<TreeviewSelect>>", self.on_selection_changed)
+        # Connect selection event
+        self.view.tree.itemSelectionChanged.connect(self.on_selection_changed)
 
         # Load initial history
         self.refresh_history()
@@ -54,7 +55,7 @@ class HistoryController:
 
         self.view.set_status(f"已加载 {len(sessions)} 条记录")
 
-    def on_selection_changed(self, event=None):
+    def on_selection_changed(self):
         """Handle selection change in history list."""
         session_id = self.view.get_selected_session_id()
         if session_id:
@@ -66,7 +67,7 @@ class HistoryController:
         """View logs for the selected session."""
         session_id = self.view.get_selected_session_id()
         if not session_id:
-            messagebox.showinfo("提示", "请先选择一个会话")
+            QMessageBox.information(self.view, "提示", "请先选择一个会话")
             return
 
         session = self.history_model.get_session(session_id)
@@ -77,7 +78,7 @@ class HistoryController:
         """Export the selected session's logs."""
         session_id = self.view.get_selected_session_id()
         if not session_id:
-            messagebox.showinfo("提示", "请先选择一个会话")
+            QMessageBox.information(self.view, "提示", "请先选择一个会话")
             return
 
         file_path = self.view.ask_to_export()

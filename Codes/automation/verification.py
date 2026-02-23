@@ -1,13 +1,12 @@
 """
 Verification handling for intelligent verification and slider verification.
-Extracted from V2 v9.py
+Migrated from Selenium to Playwright.
 """
 import pyautogui
-from selenium.webdriver.common.by import By
 
 
 class VerificationHandler:
-    """Handles various types of verification challenges."""
+    """Handles various types of verification challenges using Playwright."""
 
     def __init__(self, ratio=1.0):
         """
@@ -18,43 +17,39 @@ class VerificationHandler:
         """
         self.ratio = ratio
 
-    def get_element_screen_pos(self, driver, element):
+    def get_element_screen_pos(self, page, element):
         """
         Get the screen coordinates of an element, accounting for DPI scaling.
 
         Args:
-            driver: Selenium WebDriver instance.
-            element: WebElement to get coordinates for.
+            page: Playwright Page instance.
+            element: Playwright Locator to get coordinates for.
 
         Returns:
             tuple: (screen_x, screen_y) coordinates.
         """
-        # Get element position on page
-        element_location = element.location
-        # Get browser window position
-        window_location = driver.get_window_rect()
-        window_width = window_location['width']
-        window_height = window_location['height']
+        # Get element bounding box
+        box = element.bounding_box()
 
         # Get viewport size
-        viewport_width = driver.execute_script("return window.innerWidth;")
-        viewport_height = driver.execute_script("return window.innerHeight;")
+        viewport_size = page.viewport_size
 
-        # Calculate toolbar and border size
-        toolbar_border_width = window_width - viewport_width
-        toolbar_border_height = window_height - viewport_height
+        # Get page scroll position
+        scroll_y = page.evaluate("window.pageYOffset")
+
+        # Calculate window position (approximate for Playwright)
+        # Playwright doesn't directly expose window position like Selenium
+        # We'll need to use the page's viewport info
+        window_x = 0  # Assuming window is at default position
+        window_y = 0
 
         # Calculate screen coordinates
-        x = element_location['x'] + window_location['x']
-        y = element_location['y'] + window_location['y']
+        element_x = box['x']
+        element_y = box['y'] - scroll_y
 
-        # Page scroll offset
-        scroll = driver.execute_script("return window.pageYOffset;")
-        y -= scroll  # Relative to page
-        y += toolbar_border_height  # Add toolbar height
-
-        screen_x = self.ratio * x
-        screen_y = self.ratio * y
+        # Add window position and account for DPI
+        screen_x = self.ratio * (element_x + window_x)
+        screen_y = self.ratio * (element_y + window_y)
 
         return screen_x, screen_y
 
@@ -74,32 +69,35 @@ class VerificationHandler:
                 time.sleep(sleep_time)
                 break
 
-    def intelligent_verification(self, driver, element):
+    def intelligent_verification(self, page, locator):
         """
         Handle intelligent verification by clicking on the element.
 
         Args:
-            driver: Selenium WebDriver instance.
-            element: WebElement to click.
+            page: Playwright Page instance.
+            locator: Playwright Locator for the element.
         """
-        screen_x, screen_y = self.get_element_screen_pos(driver, element)
+        screen_x, screen_y = self.get_element_screen_pos(page, locator)
         click_pos = (screen_x, screen_y)
         pyautogui.click(click_pos)
 
-    def slider_verification(self, driver, element_slide):
+    def slider_verification(self, page, locator_slide):
         """
         Handle slider verification by dragging the slider.
 
         Args:
-            driver: Selenium WebDriver instance.
-            element_slide: WebElement for the slider.
+            page: Playwright Page instance.
+            locator_slide: Playwright Locator for the slider.
         """
-        screen_x, screen_y = self.get_element_screen_pos(driver, element_slide)
+        screen_x, screen_y = self.get_element_screen_pos(page, locator_slide)
 
-        btn_slide_element = driver.find_element(By.CLASS_NAME, "btn_slide")
-        btn_slide_width = btn_slide_element.size["width"] * self.ratio / 2
+        # Get the slider button element
+        locator_btn_slide = page.locator(".btn_slide")
+        btn_box = locator_btn_slide.bounding_box()
+        btn_slide_width = btn_box['width'] * self.ratio / 2
 
-        element_slide_width = element_slide.size["width"] * self.ratio
+        slide_box = locator_slide.bounding_box()
+        element_slide_width = slide_box['width'] * self.ratio
 
         # Move to slider button
         pyautogui.moveTo((screen_x + btn_slide_width, screen_y))

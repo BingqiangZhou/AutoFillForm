@@ -1,12 +1,10 @@
 """
-Form filling controller - coordinates form filling automation.
+Form filling controller - coordinates form filling automation with Playwright.
+Migrated from Selenium to Playwright.
 """
 import threading
 import time
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from tools.url_change_judge import url_has_changed
+from tools.url_change_judge import wait_for_url_change
 from tools.windows_resolution import get_windows_scale_ratio
 from automation.form_filler import FormFiller
 from automation.verification import VerificationHandler
@@ -14,7 +12,7 @@ from automation.browser_setup import BrowserSetup
 
 
 class FillController:
-    """Controller for form filling operations."""
+    """Controller for form filling operations using Playwright."""
 
     def __init__(self, model, view, rule_model, history_model, logger):
         """
@@ -37,7 +35,9 @@ class FillController:
         self.is_running = False
         self.stop_flag = threading.Event()
         self.current_session_id = None
-        self.driver = None
+        self.browser = None
+        self.context = None
+        self.page = None
 
         # Setup view callbacks
         self.setup_view_callbacks()
@@ -128,7 +128,7 @@ class FillController:
         return self.is_running
 
     def _fill_worker(self):
-        """Worker thread for form filling."""
+        """Worker thread for form filling with Playwright."""
         try:
             url = self.view.get_url()
             fill_count = self.view.get_fill_count()
@@ -138,9 +138,9 @@ class FillController:
             form_filler = FormFiller(log_callback=self.logger.info)
             verification_handler = VerificationHandler(ratio=self.ratio)
 
-            # Setup browser
+            # Setup browser with Playwright
             self.logger.info("正在打开浏览器...")
-            self.driver = BrowserSetup.setup_browser_for_fill()
+            self.browser, self.context, self.page = BrowserSetup.setup_browser_for_fill()
 
             fill_form_num = 0
             window_title = None
@@ -148,22 +148,15 @@ class FillController:
             while fill_form_num < fill_count and not self.stop_flag.is_set():
                 fill_form_num += 1
 
-                # Anti-detection
-                self.driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
-                    'source': 'Object.defineProperty(navigator, "webdriver", {get: () => undefined})'
-                })
-
                 self.logger.info(f"正在打开网页... ({fill_form_num}/{fill_count})")
-                self.driver.get(url)
+                self.page.goto(url, wait_until="domcontentloaded")
 
                 if window_title is None:
-                    window_title = self.driver.title
-
-                self.driver.implicitly_wait(10)
+                    window_title = self.page.title()
 
                 self.logger.info(f"填写问题... ({fill_form_num}/{fill_count})")
                 success = form_filler.fill_questions(
-                    self.driver,
+                    self.page,
                     question_infos,
                     delay=0.2
                 )
@@ -173,13 +166,14 @@ class FillController:
                     continue
 
                 # Submit form
-                self.driver.find_element(By.CLASS_NAME, 'submitbtn').click()
+                self.page.locator('.submitbtn').click()
                 self.logger.info(f"提交问卷... ({fill_form_num}/{fill_count})")
                 time.sleep(2)
 
                 # Check for verification
                 old_url = url
-                if not url_has_changed(old_url)(self.driver):
+                if not wait_for_url_change(self.page, old_url, timeout=3000):
+                    # URL hasn't changed, might be verification
                     self.logger.info(f"触发了验证... ({fill_form_num}/{fill_count})")
                     self._handle_verification(verification_handler, window_title, old_url, fill_form_num)
 
@@ -201,35 +195,55 @@ class FillController:
 
         finally:
             # Clean up
-            if self.driver:
-                self.driver.quit()
-                self.driver = None
+            self._cleanup_browser()
 
             self.is_running = False
             self.logger.save_session_logs(self.current_session_id, self.history_model)
             self.view.after(0, lambda: self.view.set_running_state(False))
 
+    def _cleanup_browser(self):
+        """Clean up browser resources."""
+        if self.page:
+            try:
+                self.page.close()
+            except:
+                pass
+            self.page = None
+
+        if self.context:
+            try:
+                self.context.close()
+            except:
+                pass
+            self.context = None
+
+        if self.browser:
+            try:
+                self.browser.close()
+            except:
+                pass
+            self.browser = None
+
     def _handle_verification(self, handler, window_title, old_url, fill_num):
         """Handle verification challenges."""
         try:
-            element = self.driver.find_element(By.CLASS_NAME, "sm-txt")
-            if element.text == "点击按钮开始智能验证":
-                handler.switch_window_to_edge(window_title)
-                self.logger.info(f"智能验证... ({fill_num})")
-                handler.intelligent_verification(self.driver, element)
+            locator = self.page.locator(".sm-txt")
+            if locator.count() > 0:
+                text = locator.inner_text()
+                if text == "点击按钮开始智能验证":
+                    handler.switch_window_to_edge(window_title)
+                    self.logger.info(f"智能验证... ({fill_num})")
+                    handler.intelligent_verification(self.page, locator)
 
-                try:
-                    WebDriverWait(self.driver, 5).until(url_has_changed(old_url))
-                except TimeoutException:
-                    if not url_has_changed(old_url)(self.driver):
-                        element_slide = self.driver.find_element(By.XPATH,
-                            "//span[contains(text(), '请按住滑块，拖动到最右边')]"
-                        )
-                        if element_slide:
+                    # Wait for URL change
+                    if not wait_for_url_change(self.page, old_url, timeout=5000):
+                        # Check for slider verification
+                        locator_slide = self.page.locator("span", has_text="请按住滑块，拖动到最右边")
+                        if locator_slide.count() > 0:
                             handler.switch_window_to_edge(window_title)
                             self.logger.info(f"滑块验证... ({fill_num})")
-                            handler.slider_verification(self.driver, element_slide)
-                            WebDriverWait(self.driver, 10).until(url_has_changed(old_url))
+                            handler.slider_verification(self.page, locator_slide)
+                            wait_for_url_change(self.page, old_url, timeout=10000)
 
         except Exception as e:
             self.logger.error(f"验证处理失败: {e}")

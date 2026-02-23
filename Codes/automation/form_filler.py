@@ -1,16 +1,13 @@
 """
-Core form filling functions.
-Extracted from V2 v9.py
+Core form filling functions with Playwright.
+Migrated from Selenium to Playwright.
 """
 import random
 import time
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.support.ui import WebDriverWait
 
 
 class FormFiller:
-    """Handles form filling operations for different question types."""
+    """Handles form filling operations for different question types using Playwright."""
 
     def __init__(self, log_callback=None):
         """
@@ -25,12 +22,12 @@ class FormFiller:
         """Log a message using the callback if available."""
         self.log_callback(message)
 
-    def radio_selection(self, driver, probabilities, question_index):
+    def radio_selection(self, page, probabilities, question_index):
         """
         Handle single-choice (radio) questions with weighted probabilities.
 
         Args:
-            driver: Selenium WebDriver instance.
+            page: Playwright Page instance.
             probabilities (list): List of probability weights for each option.
             question_index (int): The 1-based index of the question.
         """
@@ -42,16 +39,15 @@ class FormFiller:
             if rand <= cumulative:
                 option_id = f'q{question_index}_{i + 1}'
                 css = f"#{option_id} + a.jqradio"
-                option = driver.find_element(By.CSS_SELECTOR, css)
-                option.click()
+                page.locator(css).click()
                 break
 
-    def multiple_selection(self, driver, probabilities, question_index):
+    def multiple_selection(self, page, probabilities, question_index):
         """
         Handle multi-choice questions with individual probabilities.
 
         Args:
-            driver: Selenium WebDriver instance.
+            page: Playwright Page instance.
             probabilities (list): List of probability percentages (0-100) for each option.
             question_index (int): The 1-based index of the question.
         """
@@ -60,8 +56,7 @@ class FormFiller:
             if random.randint(1, 100) <= prob:
                 option_id = f'q{question_index}_{i + 1}'
                 css = f"#{option_id} + a.jqcheck"
-                option = driver.find_element(By.CSS_SELECTOR, css)
-                option.click()
+                page.locator(css).click()
                 select_option_num += 1
 
         # If no options selected, choose the one with highest probability
@@ -70,15 +65,14 @@ class FormFiller:
             max_index = probabilities.index(max_value)
             option_id = f'q{question_index}_{max_index + 1}'
             css = f"#{option_id} + a.jqcheck"
-            option = driver.find_element(By.CSS_SELECTOR, css)
-            option.click()
+            page.locator(css).click()
 
-    def matrix_radio_selection(self, driver, probabilities_list, question_index):
+    def matrix_radio_selection(self, page, probabilities_list, question_index):
         """
         Handle matrix-style single-choice questions.
 
         Args:
-            driver: Selenium WebDriver instance.
+            page: Playwright Page instance.
             probabilities_list (list): List of probability lists, one for each sub-question.
             question_index (int): The 1-based index of the question.
         """
@@ -91,16 +85,15 @@ class FormFiller:
                 cumulative += prob
                 if rand <= cumulative:
                     css = f"#{option_id} a[dval='{j + 1}']"
-                    option = driver.find_element(By.CSS_SELECTOR, css)
-                    option.click()
+                    page.locator(css).click()
                     break
 
-    def blank_filling(self, driver, info_list, question_index):
+    def blank_filling(self, page, info_list, question_index):
         """
         Handle text input (fill-in-the-blank) questions.
 
         Args:
-            driver: Selenium WebDriver instance.
+            page: Playwright Page instance.
             info_list (list): [text_list, probabilities_list] - text options and their probabilities.
             question_index (int): The 1-based index of the question.
         """
@@ -111,19 +104,18 @@ class FormFiller:
         cumulative = 0
         option_id = f'q{question_index}'
         css = f"#{option_id}"
-        element = driver.find_element(By.CSS_SELECTOR, css)
         for j, prob in enumerate(probabilities_list):
             cumulative += prob
             if rand <= cumulative:
-                element.send_keys(text_list[j])
+                page.locator(css).fill(text_list[j])
                 break
 
-    def fill_questions(self, driver, question_infos, delay=0.2):
+    def fill_questions(self, page, question_infos, delay=0.2):
         """
         Fill all questions based on the configuration.
 
         Args:
-            driver: Selenium WebDriver instance.
+            page: Playwright Page instance.
             question_infos (list): List of question configurations from YAML.
             delay (float): Delay in seconds between questions.
 
@@ -134,13 +126,13 @@ class FormFiller:
             for index, dicts in enumerate(question_infos):
                 key, value = list(dicts.items())[0]
                 if key == "multiple_selection":
-                    self.multiple_selection(driver, value, index + 1)
+                    self.multiple_selection(page, value, index + 1)
                 elif key == "radio_selection":
-                    self.radio_selection(driver, value, index + 1)
+                    self.radio_selection(page, value, index + 1)
                 elif key == "matrix_radio_selection":
-                    self.matrix_radio_selection(driver, value, index + 1)
+                    self.matrix_radio_selection(page, value, index + 1)
                 elif key == "blank_filling":
-                    self.blank_filling(driver, value, index + 1)
+                    self.blank_filling(page, value, index + 1)
                 else:
                     self.log(f"Unknown question type: {key}")
                 time.sleep(delay)

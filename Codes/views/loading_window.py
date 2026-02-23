@@ -1,13 +1,13 @@
 """
-Loading window dialog.
-Reused from V3.
+Loading window dialog - Migrated to PyQt6.
 """
-import tkinter as tk
-from tkinter import Toplevel, Label
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QFont
 
 
-class LoadingWindow:
-    """Modal loading indicator dialog."""
+class LoadingWindow(QDialog):
+    """Modal loading indicator dialog using PyQt6."""
 
     def __init__(self, parent, message="正在加载，请稍候..."):
         """
@@ -17,58 +17,47 @@ class LoadingWindow:
             parent: Parent window.
             message (str): Initial message to display.
         """
-        self.parent = parent
-        self.window = Toplevel(parent)
-        self.window.withdraw()  # Hide initially
-        self.window.title("正在执行，请稍候...")
-        self.window.protocol("WM_DELETE_WINDOW", self.disable_event)
-        self.window.transient(parent)
-        self.window.grab_set()
+        super().__init__(parent)
+        self.setWindowTitle("正在执行，请稍候...")
+        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.CustomizeWindowHint)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
+        self.setFixedSize(300, 100)
 
-        self.message_label = Label(self.window, text=message)
-        self.message_label.pack(pady=10)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
 
-        self.loading_label = Label(self.window, text="⏳", font=("Helvetica", 32))
-        self.loading_label.pack()
+        self.message_label = QLabel(message)
+        self.message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.message_label)
 
-        self.center_window()
-        self.window.deiconify()  # Show window
+        self.loading_label = QLabel("⏳")
+        self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.loading_label.setFont(QFont("Helvetica", 32))
+        layout.addWidget(self.loading_label)
 
+        # Center the dialog
+        if parent:
+            parent_rect = parent.geometry()
+            x = parent_rect.x() + (parent_rect.width() - 300) // 2
+            y = parent_rect.y() + (parent_rect.height() - 100) // 2
+            self.move(x, y)
+
+        # Start the animation
         self.rotate_label()
-
-    def center_window(self):
-        """Center the window relative to parent."""
-        self.parent.update_idletasks()
-        parent_x = self.parent.winfo_rootx()
-        parent_y = self.parent.winfo_rooty()
-        parent_width = self.parent.winfo_width()
-        parent_height = self.parent.winfo_height()
-        window_width = 300
-        window_height = 100
-
-        pos_x = parent_x + (parent_width // 2) - (window_width // 2)
-        pos_y = parent_y + (parent_height // 2) - (window_height // 2)
-
-        self.window.geometry(f"{window_width}x{window_height}+{pos_x}+{pos_y}")
-
-    def disable_event(self):
-        """Prevent window closing."""
-        pass
-
-    def close(self):
-        """Close the loading window."""
-        self.window.grab_release()
-        self.window.destroy()
-
-    def update_message(self, message):
-        """Update the displayed message."""
-        self.message_label.config(text=message)
 
     def rotate_label(self):
         """Rotate the loading icon."""
-        current_text = self.loading_label["text"]
+        current_text = self.loading_label.text()
         if current_text == "⏳":
-            self.loading_label["text"] = "⌛"
+            self.loading_label.setText("⌛")
         else:
-            self.loading_label["text"] = "⏳"
-        self.window.after(500, self.rotate_label)
+            self.loading_label.setText("⏳")
+        QTimer.singleShot(500, self.rotate_label)
+
+    def closeEvent(self, event):
+        """Prevent window closing with X button."""
+        event.ignore()
+
+    def update_message(self, message):
+        """Update the displayed message."""
+        self.message_label.setText(message)

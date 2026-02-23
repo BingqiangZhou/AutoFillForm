@@ -1,8 +1,8 @@
 """
 Rule editor controller - YAML rule editor logic.
+Migrated to PyQt6.
 """
 from utils.yaml_validator import YamlValidator
-from models.rule_model import RuleModel
 
 
 class RuleEditorController:
@@ -57,19 +57,13 @@ class RuleEditorController:
     def open_rule(self, file_path=None):
         """Open a rule file."""
         if not file_path:
-            # Get file from rules directory
-            import tkinter.filedialog as filedialog
-            file_path = filedialog.askopenfilename(
-                title="打开规则文件",
-                initialdir=self.rule_model.get_rules_dir(),
-                filetypes=[("YAML files", "*.yaml *.yml"), ("All files", "*.*")]
-            )
-            if not file_path:
-                return
+            # File dialog is handled by view
+            success = self.view.open_file()
+        else:
+            success = self.view.open_file(file_path)
 
-        success = self.view.open_file(file_path)
         if success:
-            self.view.set_status(f"已打开: {file_path}")
+            self.view.set_status(f"已打开: {self.view.current_file}")
 
     def save_rule(self):
         """Save the current rule."""
@@ -95,20 +89,10 @@ class RuleEditorController:
             self.view.show_validation_result(False, error_msg)
             return False
 
-        # Save as new file
-        import tkinter.filedialog as filedialog
-        file_path = filedialog.asksaveasfilename(
-            title="另存为",
-            defaultextension=".yaml",
-            initialdir=self.rule_model.get_rules_dir(),
-            filetypes=[("YAML files", "*.yaml"), ("All files", "*.*")]
-        )
-        if not file_path:
-            return False
-
-        success = self.view.save_file(file_path)
+        # Save as new file (file dialog is handled by view)
+        success = self.view.save_file()
         if success:
-            self.view.set_status(f"已保存: {file_path}")
+            self.view.set_status(f"已保存: {self.view.current_file}")
             return True
         return False
 
@@ -116,21 +100,10 @@ class RuleEditorController:
         """Validate the current rule content."""
         content = self.view.get_content()
 
-        # Clear previous error highlighting
-        self.view.clear_error_highlighting()
-
         # Validate syntax
         is_valid, error_msg, data = YamlValidator.validate_syntax(content)
         if not is_valid:
             self.view.show_validation_result(False, error_msg)
-            # Try to extract line number from error message
-            if "第" in error_msg and "行" in error_msg:
-                try:
-                    parts = error_msg.split("第")[1].split("行")[0]
-                    line_num = int(parts)
-                    self.view.highlight_error(line_num)
-                except:
-                    pass
             return
 
         # Validate structure
@@ -139,7 +112,8 @@ class RuleEditorController:
 
     def load_rule_by_name(self, file_name):
         """Load a rule by file name (called from other controllers)."""
-        file_path = f"{self.rule_model.get_rules_dir()}/{file_name}"
+        import os
+        file_path = os.path.join(self.rule_model.get_rules_dir(), file_name)
         self.open_rule(file_path)
 
     def has_unsaved_changes(self):

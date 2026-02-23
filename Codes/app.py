@@ -1,11 +1,12 @@
 """
-AutoFillForm V4 - Main Entry Point
+AutoFillForm V5 - Main Entry Point
 
-Combines V2's automation capabilities with V3's modern GUI architecture.
+Migrated from V4: Tkinter → PyQt6, Selenium → Playwright
 """
-import tkinter as tk
 import os
 import sys
+from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtCore import QSettings
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -16,16 +17,17 @@ from controllers import MainController, FillController, AnalyzeController, RuleE
 from utils import GuiLogger
 
 
-class AutoFillFormApp:
-    """Main application class."""
+class AutoFillFormApp(QMainWindow):
+    """Main application class with PyQt6."""
 
     def __init__(self):
         """Initialize the application."""
-        self.root = tk.Tk()
-        self.root.title("AutoFillForm V4")
+        super().__init__()
+        self.setWindowTitle("AutoFillForm V5")
+        self.resize(900, 650)
 
-        # Set window icon if available
-        # self.root.iconbitmap('icon.ico')
+        # QSettings for window geometry persistence
+        self.settings = QSettings("AutoFillForm", "V5")
 
         # Get the script directory
         if getattr(sys, 'frozen', False):
@@ -47,18 +49,18 @@ class AutoFillFormApp:
         }
 
         # Create main view
-        self.main_view = MainView(self.root, "AutoFillForm V4")
+        self.main_view = MainView(self)
 
         # Create sub-views
         self.views = {
             'main': self.main_view,
-            'fill': FillView(self.main_view.get_fill_frame()),
+            'fill': FillView(self.main_view.get_fill_widget()),
             'analyze': AnalyzeView(
-                self.main_view.get_analyze_frame(),
+                self.main_view.get_analyze_widget(),
                 initial_link=self.models['survey'].get_survey_link()
             ),
-            'rule_editor': RuleEditorView(self.main_view.get_rule_editor_frame()),
-            'history': HistoryView(self.main_view.get_history_frame())
+            'rule_editor': RuleEditorView(self.main_view.get_rule_editor_widget()),
+            'history': HistoryView(self.main_view.get_history_widget())
         }
 
         # Create controllers
@@ -89,7 +91,7 @@ class AutoFillFormApp:
 
         # Create main controller
         self.main_controller = MainController(
-            self.root,
+            self,
             self.models,
             self.views,
             self.controllers
@@ -101,46 +103,47 @@ class AutoFillFormApp:
             self.controllers['fill'].load_rule_file(last_rule)
 
         # Set initial status
-        self.main_view.set_status("就绪 - AutoFillForm V4")
+        self.main_view.set_status("就绪 - AutoFillForm V5")
 
         # Log application start
-        self.logger.info("AutoFillForm V4 启动")
+        self.logger.info("AutoFillForm V5 启动")
 
         # Load window geometry if saved
         self._load_window_geometry()
 
-        # Handle window close for geometry saving
-        self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
-
     def _load_window_geometry(self):
-        """Load and restore window geometry."""
-        geometry = self.models['survey'].get_config("window_geometry")
+        """Load and restore window geometry from QSettings."""
+        geometry = self.settings.value("window_geometry")
         if geometry:
             try:
-                self.root.geometry(geometry)
+                self.restoreGeometry(geometry)
             except:
                 pass
 
-    def _on_closing(self):
-        """Handle window closing."""
+    def closeEvent(self, event):
+        """Handle window closing event."""
         # Save window geometry
-        self.models['survey'].set_config(
-            "window_geometry",
-            self.root.geometry()
-        )
+        self.settings.setValue("window_geometry", self.saveGeometry())
 
         # Use main controller's close handler
         self.main_controller.on_closing()
+        event.accept()
 
     def run(self):
         """Run the application main loop."""
-        self.root.mainloop()
+        self.show()
 
 
 def main():
     """Main entry point."""
-    app = AutoFillFormApp()
-    app.run()
+    app = QApplication(sys.argv)
+    app.setApplicationName("AutoFillForm")
+    app.setOrganizationName("AutoFillForm")
+
+    window = AutoFillFormApp()
+    window.run()
+
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

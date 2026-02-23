@@ -1,189 +1,236 @@
 """
-Form filling view - V2 features in GUI.
+Form filling view - Migrated to PyQt6 with thread-safe signals.
 """
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox, scrolledtext
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+                             QLineEdit, QSpinBox, QPushButton, QProgressBar,
+                             QTextEdit, QFileDialog, QMessageBox, QGroupBox)
+from PyQt6.QtCore import pyqtSignal, QObject, QMutex, QMutexLocker
 
 
-class FillView:
-    """View for the form filling tab."""
+class FillViewSignals(QObject):
+    """Signals for thread-safe updates from worker thread."""
 
-    def __init__(self, parent_frame):
+    log_append = pyqtSignal(str)
+    progress_update = pyqtSignal(int)
+    status_update = pyqtSignal(str)
+    running_state_changed = pyqtSignal(bool)
+
+
+class FillView(QWidget):
+    """View for the form filling tab using PyQt6."""
+
+    def __init__(self, parent_widget):
         """
         Initialize the fill view.
 
         Args:
-            parent_frame: Parent frame to contain this view.
+            parent_widget: Parent widget to contain this view.
         """
-        self.frame = parent_frame
+        super().__init__(parent_widget)
+        self.signals = FillViewSignals()
         self.setup_ui()
+
+        # Thread-safe state
+        self._mutex = QMutex()
+        self._running_state = False
 
     def setup_ui(self):
         """Set up the UI components."""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 10, 10, 10)
+
         # Top frame for configuration
-        config_frame = ttk.LabelFrame(self.frame, text="配置", padding=10)
-        config_frame.pack(fill=tk.X, padx=10, pady=10)
+        config_group = QGroupBox("配置")
+        config_layout = QVBoxLayout(config_group)
 
         # Rule file selection
-        rule_frame = ttk.Frame(config_frame)
-        rule_frame.pack(fill=tk.X, pady=5)
-
-        ttk.Label(rule_frame, text="规则文件:").pack(side=tk.LEFT)
-        self.rule_file_var = tk.StringVar()
-        self.rule_entry = ttk.Entry(rule_frame, textvariable=self.rule_file_var, state="readonly")
-        self.rule_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-
-        self.browse_button = ttk.Button(rule_frame, text="浏览...")
-        self.browse_button.pack(side=tk.LEFT)
+        rule_layout = QHBoxLayout()
+        rule_layout.addWidget(QLabel("规则文件:"))
+        self.rule_edit = QLineEdit()
+        self.rule_edit.setReadOnly(True)
+        rule_layout.addWidget(self.rule_edit)
+        self.browse_button = QPushButton("浏览...")
+        rule_layout.addWidget(self.browse_button)
+        config_layout.addLayout(rule_layout)
 
         # Fill count
-        count_frame = ttk.Frame(config_frame)
-        count_frame.pack(fill=tk.X, pady=5)
-
-        ttk.Label(count_frame, text="填写数量:").pack(side=tk.LEFT)
-        self.fill_count_var = tk.IntVar(value=1)
-        self.count_spinbox = ttk.Spinbox(
-            count_frame,
-            from_=1,
-            to=1000,
-            textvariable=self.fill_count_var,
-            width=10
-        )
-        self.count_spinbox.pack(side=tk.LEFT, padx=5)
+        count_layout = QHBoxLayout()
+        count_layout.addWidget(QLabel("填写数量:"))
+        self.count_spinbox = QSpinBox()
+        self.count_spinbox.setRange(1, 1000)
+        self.count_spinbox.setValue(1)
+        count_layout.addWidget(self.count_spinbox)
+        count_layout.addStretch()
+        config_layout.addLayout(count_layout)
 
         # URL display
-        url_frame = ttk.Frame(config_frame)
-        url_frame.pack(fill=tk.X, pady=5)
+        url_layout = QHBoxLayout()
+        url_layout.addWidget(QLabel("问卷链接:"))
+        self.url_edit = QLineEdit()
+        self.url_edit.setReadOnly(True)
+        url_layout.addWidget(self.url_edit)
+        config_layout.addLayout(url_layout)
 
-        ttk.Label(url_frame, text="问卷链接:").pack(side=tk.LEFT)
-        self.url_var = tk.StringVar()
-        self.url_entry = ttk.Entry(url_frame, textvariable=self.url_var, state="readonly")
-        self.url_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+        layout.addWidget(config_group)
 
         # Control frame
-        control_frame = ttk.LabelFrame(self.frame, text="控制", padding=10)
-        control_frame.pack(fill=tk.X, padx=10, pady=5)
+        control_group = QGroupBox("控制")
+        control_layout = QHBoxLayout(control_group)
+        control_layout.addStretch()
 
-        button_frame = ttk.Frame(control_frame)
-        button_frame.pack()
+        self.start_button = QPushButton("开始填写")
+        control_layout.addWidget(self.start_button)
 
-        self.start_button = ttk.Button(button_frame, text="开始填写")
-        self.start_button.pack(side=tk.LEFT, padx=5)
+        self.stop_button = QPushButton("停止")
+        self.stop_button.setEnabled(False)
+        control_layout.addWidget(self.stop_button)
 
-        self.stop_button = ttk.Button(button_frame, text="停止", state="disabled")
-        self.stop_button.pack(side=tk.LEFT, padx=5)
+        control_layout.addStretch()
+        layout.addWidget(control_group)
 
         # Progress frame
-        progress_frame = ttk.LabelFrame(self.frame, text="进度", padding=10)
-        progress_frame.pack(fill=tk.X, padx=10, pady=5)
+        progress_group = QGroupBox("进度")
+        progress_layout = QVBoxLayout(progress_group)
 
-        # Progress bar
-        self.progress_var = tk.DoubleVar(value=0)
-        self.progress_bar = ttk.Progressbar(
-            progress_frame,
-            variable=self.progress_var,
-            maximum=100,
-            length=400
-        )
-        self.progress_bar.pack(pady=5)
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+        progress_layout.addWidget(self.progress_bar)
 
-        # Status label
-        self.status_var = tk.StringVar(value="就绪")
-        self.status_label = ttk.Label(progress_frame, textvariable=self.status_var)
-        self.status_label.pack()
+        self.status_label = QLabel("就绪")
+        progress_layout.addWidget(self.status_label)
+
+        layout.addWidget(progress_group)
 
         # Log display
-        log_frame = ttk.LabelFrame(self.frame, text="日志", padding=10)
-        log_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        log_group = QGroupBox("日志")
+        log_layout = QVBoxLayout(log_group)
 
-        self.log_text = scrolledtext.ScrolledText(
-            log_frame,
-            height=15,
-            state="disabled",
-            wrap=tk.WORD
-        )
-        self.log_text.pack(fill=tk.BOTH, expand=True)
+        self.log_text = QTextEdit()
+        self.log_text.setReadOnly(True)
+        self.log_text.setMinimumHeight(200)
+        log_layout.addWidget(self.log_text)
+
+        layout.addWidget(log_group, 1)
+
+        # Connect signals to slots for thread-safe updates
+        self.signals.log_append.connect(self._append_log_slot)
+        self.signals.progress_update.connect(self._set_progress_slot)
+        self.signals.status_update.connect(self._set_status_slot)
+        self.signals.running_state_changed.connect(self._set_running_state_slot)
 
     def set_browse_command(self, command):
         """Set the command for the browse button."""
-        self.browse_button.config(command=command)
+        self.browse_button.clicked.connect(command)
 
     def set_start_command(self, command):
         """Set the command for the start button."""
-        self.start_button.config(command=command)
+        self.start_button.clicked.connect(command)
 
     def set_stop_command(self, command):
         """Set the command for the stop button."""
-        self.stop_button.config(command=command)
+        self.stop_button.clicked.connect(command)
 
     def get_rule_file(self):
         """Get the current rule file path."""
-        return self.rule_file_var.get()
+        return self.rule_edit.text()
 
     def set_rule_file(self, file_path):
         """Set the rule file path."""
-        self.rule_file_var.set(file_path)
+        self.rule_edit.setText(file_path)
 
     def get_url(self):
         """Get the URL."""
-        return self.url_var.get()
+        return self.url_edit.text()
 
     def set_url(self, url):
         """Set the URL."""
-        self.url_var.set(url)
+        self.url_edit.setText(url)
 
     def get_fill_count(self):
         """Get the fill count."""
-        return self.fill_count_var.get()
+        return self.count_spinbox.value()
 
     def set_fill_count(self, count):
         """Set the fill count."""
-        self.fill_count_var.set(count)
+        self.count_spinbox.setValue(count)
 
+    # Thread-safe update methods using signals
     def set_progress(self, value):
-        """Set the progress bar value (0-100)."""
-        self.progress_var.set(value)
+        """Set the progress bar value (0-100) - thread-safe via signal."""
+        self.signals.progress_update.emit(value)
+
+    def _set_progress_slot(self, value):
+        """Slot for progress update (runs in GUI thread)."""
+        self.progress_bar.setValue(value)
 
     def set_status(self, status):
-        """Set the status text."""
-        self.status_var.set(status)
+        """Set the status text - thread-safe via signal."""
+        self.signals.status_update.emit(status)
+
+    def _set_status_slot(self, status):
+        """Slot for status update (runs in GUI thread)."""
+        self.status_label.setText(status)
 
     def append_log(self, message):
-        """Append a log message to the log display."""
-        self.log_text.config(state="normal")
-        self.log_text.insert(tk.END, message + "\n")
-        self.log_text.see(tk.END)
-        self.log_text.config(state="disabled")
+        """Append a log message - thread-safe via signal."""
+        self.signals.log_append.emit(message)
+
+    def _append_log_slot(self, message):
+        """Slot for log append (runs in GUI thread)."""
+        cursor = self.log_text.textCursor()
+        cursor.movePosition(cursor.MoveOperation.End)
+        cursor.insertText(message + "\n")
+        self.log_text.setTextCursor(cursor)
+        self.log_text.ensureCursorVisible()
 
     def clear_log(self):
         """Clear the log display."""
-        self.log_text.config(state="normal")
-        self.log_text.delete(1.0, tk.END)
-        self.log_text.config(state="disabled")
+        self.log_text.clear()
 
     def set_running_state(self, is_running):
-        """Enable/disable buttons based on running state."""
+        """Enable/disable buttons based on running state - thread-safe via signal."""
+        self.signals.running_state_changed.emit(is_running)
+
+    def _set_running_state_slot(self, is_running):
+        """Slot for running state update (runs in GUI thread)."""
+        with QMutexLocker(self._mutex):
+            self._running_state = is_running
+
         if is_running:
-            self.start_button.config(state="disabled")
-            self.stop_button.config(state="normal")
-            self.browse_button.config(state="disabled")
+            self.start_button.setEnabled(False)
+            self.stop_button.setEnabled(True)
+            self.browse_button.setEnabled(False)
         else:
-            self.start_button.config(state="normal")
-            self.stop_button.config(state="disabled")
-            self.browse_button.config(state="normal")
+            self.start_button.setEnabled(True)
+            self.stop_button.setEnabled(False)
+            self.browse_button.setEnabled(True)
+
+    def check_is_running(self):
+        """Check if currently running (thread-safe)."""
+        with QMutexLocker(self._mutex):
+            return self._running_state
 
     def show_info(self, title, message):
         """Show an info dialog."""
-        messagebox.showinfo(title, message)
+        QMessageBox.information(self, title, message)
 
     def show_error(self, title, message):
         """Show an error dialog."""
-        messagebox.showerror(title, message)
+        QMessageBox.critical(self, title, message)
 
     def ask_to_browse_rule_file(self, initial_dir):
         """Show file dialog for selecting rule file."""
-        return filedialog.askopenfilename(
-            title="选择规则文件",
-            initialdir=initial_dir,
-            filetypes=[("YAML files", "*.yaml *.yml"), ("All files", "*.*")]
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "选择规则文件",
+            initial_dir,
+            "YAML files (*.yaml *.yml);;All files (*.*)"
         )
+        return file_path
+
+    # For backward compatibility with controller using after()
+    def after(self, ms, callback):
+        """Schedule a callback to run after ms milliseconds (for compatibility)."""
+        from PyQt6.QtCore import QTimer
+        QTimer.singleShot(ms, callback)
