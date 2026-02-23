@@ -53,9 +53,9 @@ jobs:
           include-package-data: playwright
           output-dir: build
           output-file: AutoFillForm.exe
-          noinclude-setuptools-mode: true
-          noinclude-pytest-mode: true
-          noinclude-unittest-mode: true
+          noinclude-setuptools-mode: nofollow
+          noinclude-pytest-mode: nofollow
+          noinclude-unittest-mode: nofollow
 
       - name: Package distribution
         id: package
