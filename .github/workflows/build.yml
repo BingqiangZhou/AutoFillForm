@@ -59,16 +59,16 @@ jobs:
           cd Codes
           pip install -r requirements.txt
           pip install pyautogui
-          pip install PyQt6==6.6.1 PyQt6-Qt6==6.6.1 PyQt6-sip==13.6.0
+          pip install PySide6==6.6.1
 
       - name: Install Windows-specific dependencies
         if: matrix.platform == 'windows'
         shell: bash
         run: pip install -r Codes/requirements-windows.txt
 
-      - name: Verify PyQt6
+      - name: Verify PySide6
         shell: bash
-        run: python -c "from PyQt6.QtCore import QCoreApplication; print('PyQt6 OK')"
+        run: python -c "from PySide6.QtCore import QCoreApplication; print('PySide6 OK')"
 
       # ── Build ─────────────────────────────────────────────────────
 
@@ -79,7 +79,7 @@ jobs:
           nuitka-version: "2.8.10"
           script-name: Codes/app.py
           mode: standalone
-          enable-plugins: pyqt6
+          enable-plugins: pyside6
           windows-console-mode: disable
           include-data-dir: Codes/rules/=rules/
           include-package-data: playwright
@@ -96,7 +96,7 @@ jobs:
           nuitka-version: "2.8.10"
           script-name: Codes/app.py
           mode: app
-          enable-plugins: pyqt6
+          enable-plugins: pyside6
           macos-app-mode: gui
           include-data-dir: Codes/rules/=rules/
           include-package-data: playwright
@@ -114,7 +114,7 @@ jobs:
           nuitka-version: "2.8.10"
           script-name: Codes/app.py
           mode: standalone
-          enable-plugins: pyqt6
+          enable-plugins: pyside6
           include-data-dir: Codes/rules/=rules/
           include-package-data: playwright
           noinclude-data-files: "playwright/driver/node"

@@ -1,11 +1,11 @@
 # AutoFillForm V5 Dependencies
-# Migration from Selenium to Playwright, Tkinter to PyQt6
+# Migration from Selenium to Playwright, Tkinter to PySide6
 
 # Playwright for browser automation (replaces Selenium)
 playwright==1.40.0
 
-# PyQt6 for GUI (replaces Tkinter)
-PyQt6==6.6.1
+# PySide6 for GUI (replaces Tkinter)
+PySide6==6.6.1
 
 # qasync for better async integration (optional)
 qasync==0.27.1

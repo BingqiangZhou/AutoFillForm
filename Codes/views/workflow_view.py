@@ -1,22 +1,22 @@
 """
 Workflow view - integrated analyze + configure + fill workflow.
 """
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-                             QLineEdit, QSpinBox, QPushButton, QProgressBar,
-                             QTextEdit, QMessageBox, QGroupBox,
-                             QTreeWidget, QTreeWidgetItem, QHeaderView)
-from PyQt6.QtCore import pyqtSignal, QObject, QMutex, QMutexLocker, Qt
-from PyQt6.QtGui import QFont
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+                              QLineEdit, QSpinBox, QPushButton, QProgressBar,
+                              QTextEdit, QMessageBox, QGroupBox,
+                              QTreeWidget, QTreeWidgetItem, QHeaderView)
+from PySide6.QtCore import Signal, QObject, QMutex, QMutexLocker, Qt
+from PySide6.QtGui import QFont
 
 
 class WorkflowViewSignals(QObject):
     """Signals for thread-safe updates from worker threads."""
 
-    log_append = pyqtSignal(str)
-    progress_update = pyqtSignal(int)
-    status_update = pyqtSignal(str)
-    running_state_changed = pyqtSignal(bool)
-    analysis_complete = pyqtSignal(object)
+    log_append = Signal(str)
+    progress_update = Signal(int)
+    status_update = Signal(str)
+    running_state_changed = Signal(bool)
+    analysis_complete = Signal(object)
 
 
 class WorkflowView(QWidget):
@@ -494,5 +494,5 @@ class WorkflowView(QWidget):
 
     def after(self, ms, callback):
         """Schedule a callback on the main thread (compatibility helper)."""
-        from PyQt6.QtCore import QTimer
+        from PySide6.QtCore import QTimer
         QTimer.singleShot(ms, callback)

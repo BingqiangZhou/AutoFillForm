@@ -1,12 +1,12 @@
 """
 AutoFillForm - Main Entry Point
 
-Migrated from V4: Tkinter -> PyQt6, Selenium -> Playwright
+Migrated from V4: Tkinter -> PySide6, Selenium -> Playwright
 """
 import os
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow
-from PyQt6.QtCore import QSettings
+from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtCore import QSettings
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -21,7 +21,7 @@ from utils import GuiLogger
 
 
 class AutoFillFormApp(QMainWindow):
-    """Main application class with PyQt6."""
+    """Main application class with PySide6."""
 
     def __init__(self):
         """Initialize the application."""

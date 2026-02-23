@@ -1,13 +1,13 @@
 """
-Loading window dialog - Migrated to PyQt6.
+Loading window dialog - Migrated to PySide6.
 """
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QFont
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QFont
 
 
 class LoadingWindow(QDialog):
-    """Modal loading indicator dialog using PyQt6."""
+    """Modal loading indicator dialog using PySide6."""
 
     def __init__(self, parent, message="正在加载，请稍候..."):
         """

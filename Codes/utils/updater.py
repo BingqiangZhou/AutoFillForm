@@ -11,7 +11,7 @@ import threading
 import urllib.request
 import urllib.error
 
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 
 def _parse_version(version_str):
@@ -37,12 +37,12 @@ class UpdateChecker(QObject):
     """Check for updates via GitHub Releases API and download assets."""
 
     # Signals
-    check_finished = pyqtSignal(dict)   # release info dict
-    check_error = pyqtSignal(str)       # error message
+    check_finished = Signal(dict)   # release info dict
+    check_error = Signal(str)       # error message
 
-    download_progress = pyqtSignal(int, int)  # bytes_downloaded, total_bytes
-    download_finished = pyqtSignal(str)       # saved file path
-    download_error = pyqtSignal(str)          # error message
+    download_progress = Signal(int, int)  # bytes_downloaded, total_bytes
+    download_finished = Signal(str)       # saved file path
+    download_error = Signal(str)          # error message
 
     def __init__(self, owner, repo, current_version, parent=None):
         super().__init__(parent)

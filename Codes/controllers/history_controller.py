@@ -1,8 +1,8 @@
 """
 History controller - session history management.
-Migrated to PyQt6.
+Migrated to PySide6.
 """
-from PyQt6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox
 from datetime import datetime
 
 

@@ -1,6 +1,6 @@
 """
 Rule editor controller - YAML rule editor logic.
-Migrated to PyQt6.
+Migrated to PySide6.
 """
 from utils.yaml_validator import YamlValidator
 

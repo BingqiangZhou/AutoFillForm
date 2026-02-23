@@ -1,13 +1,13 @@
 """
-YAML rule editor view - Migrated to PyQt6 with syntax highlighting.
+YAML rule editor view - Migrated to PySide6 with syntax highlighting.
 """
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-                             QPushButton, QTextEdit, QPlainTextEdit,
-                             QFileDialog, QMessageBox, QFrame, QSplitter)
-from PyQt6.QtCore import Qt, pyqtSignal, QTimer
-from PyQt6.QtGui import (QFont, QTextCharFormat, QColor, QSyntaxHighlighter,
-                         QTextDocument, QPainter, QTextCursor, QTextFormat,
-                         QTextBlock, QPaintEvent)
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+                              QPushButton, QTextEdit, QPlainTextEdit,
+                              QFileDialog, QMessageBox, QFrame, QSplitter)
+from PySide6.QtCore import Qt, Signal, QTimer
+from PySide6.QtGui import (QFont, QTextCharFormat, QColor, QSyntaxHighlighter,
+                           QTextDocument, QPainter, QTextCursor, QTextFormat,
+                           QTextBlock, QPaintEvent)
 
 
 class YamlSyntaxHighlighter(QSyntaxHighlighter):
@@ -79,7 +79,7 @@ class YamlEditor(QPlainTextEdit):
 
 
 class RuleEditorView:
-    """View for the YAML rule editor tab using PyQt6."""
+    """View for the YAML rule editor tab using PySide6."""
 
     def __init__(self, parent_widget):
         """

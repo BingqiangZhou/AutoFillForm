@@ -1,16 +1,16 @@
 """
-History and logs view - Migrated to PyQt6.
+History and logs view - Migrated to PySide6.
 """
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-                             QPushButton, QTextEdit, QFileDialog, QMessageBox,
-                             QGroupBox, QTreeWidget, QTreeWidgetItem,
-                             QAbstractItemView, QHeaderView)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+                              QPushButton, QTextEdit, QFileDialog, QMessageBox,
+                              QGroupBox, QTreeWidget, QTreeWidgetItem,
+                              QAbstractItemView, QHeaderView)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 
 
 class HistoryView(QWidget):
-    """View for the history and logs tab using PyQt6."""
+    """View for the history and logs tab using PySide6."""
 
     def __init__(self, parent_widget):
         """

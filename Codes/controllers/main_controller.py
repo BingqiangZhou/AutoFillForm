@@ -1,12 +1,12 @@
 """
 Main controller - coordinates between views and sub-controllers.
-Migrated to PyQt6.
+Migrated to PySide6.
 """
-from PyQt6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox
 
 
 class MainController:
-    """Main controller that coordinates all sub-controllers using PyQt6."""
+    """Main controller that coordinates all sub-controllers using PySide6."""
 
     def __init__(self, main_window, models, views, controllers):
         """

@@ -1,5 +1,5 @@
 """
-Main view with tabbed interface - Migrated to PyQt6.
+Main view with tabbed interface - Migrated to PySide6.
 """
 import os
 import subprocess
@@ -10,17 +10,17 @@ import webbrowser
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import version as version_info
 
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
-                             QStatusBar, QLabel, QPushButton, QTextEdit,
-                             QProgressBar, QFileDialog, QMessageBox,
-                             QScrollArea)
-from PyQt6.QtCore import Qt
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
+                              QStatusBar, QLabel, QPushButton, QTextEdit,
+                              QProgressBar, QFileDialog, QMessageBox,
+                              QScrollArea)
+from PySide6.QtCore import Qt
 
 from utils.updater import UpdateChecker
 
 
 class MainView(QWidget):
-    """Main application window with tabbed interface using PyQt6."""
+    """Main application window with tabbed interface using PySide6."""
 
     def __init__(self, main_window, title=None):
         """
@@ -80,7 +80,7 @@ class MainView(QWidget):
         about_text = QLabel(
             f"<h2>{version_info.__fullname__}</h2>"
             "<p>自动填写问卷工具</p>"
-            "<p>迁移自V4: Playwright + PyQt6</p>"
+            "<p>迁移自V4: Playwright + PySide6</p>"
             "<hr>"
             "<h3>功能特性</h3>"
             "<ul>"
@@ -92,7 +92,7 @@ class MainView(QWidget):
             "<h3>技术栈</h3>"
             "<ul>"
             "<li>Playwright (浏览器自动化)</li>"
-            "<li>PyQt6 (GUI框架)</li>"
+            "<li>PySide6 (GUI框架)</li>"
             "</ul>"
         )
         about_text.setWordWrap(True)
