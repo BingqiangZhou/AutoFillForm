@@ -95,7 +95,7 @@ jobs:
         with:
           nuitka-version: "2.8.10"
           script-name: Codes/app.py
-          mode: standalone
+          mode: app
           enable-plugins: pyqt6
           macos-app-mode: gui
           include-data-dir: Codes/rules/=rules/
@@ -128,9 +128,13 @@ jobs:
         if: matrix.platform != 'windows'
         shell: bash
         run: |
-          DIST_DIR=$(find build -maxdepth 1 -type d -name "*.dist" | head -1)
-          if [ -z "$DIST_DIR" ]; then
-            DIST_DIR=$(find build -maxdepth 1 -type d ! -path build | head -1)
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            DIST_DIR=$(find build -maxdepth 1 -type d -name "*.app" | head -1)/Contents/MacOS
+          else
+            DIST_DIR=$(find build -maxdepth 1 -type d -name "*.dist" | head -1)
+            if [ -z "$DIST_DIR" ]; then
+              DIST_DIR=$(find build -maxdepth 1 -type d ! -path build | head -1)
+            fi
           fi
           PW_NODE=$(python -c "import playwright; import os; print(os.path.join(os.path.dirname(playwright.__file__), 'driver', 'node'))")
           mkdir -p "$DIST_DIR/playwright/driver"
@@ -155,9 +159,20 @@ jobs:
                            -DestinationPath "build/$zipName"
           echo "ZIP_PATH=build/$zipName" >> $env:GITHUB_OUTPUT
 
-      - name: Package distribution (macOS / Linux)
-        if: matrix.platform != 'windows'
-        id: package-unix
+      - name: Package distribution (macOS)
+        if: matrix.platform == 'macos'
+        id: package-macos
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ZIP_NAME="AutoFillForm-${VERSION}-${{ matrix.artifact_suffix }}.zip"
+          cd build && zip -r -y "$ZIP_NAME" AutoFillForm.app
+          cd ..
+          echo "ZIP_PATH=build/$ZIP_NAME" >> $GITHUB_OUTPUT
+
+      - name: Package distribution (Linux)
+        if: matrix.platform == 'linux'
+        id: package-linux
         shell: bash
         run: |
           DIST_DIR=$(find build -maxdepth 1 -type d -name "*.dist" | head -1)
@@ -177,8 +192,10 @@ jobs:
         run: |
           if [ "${{ matrix.platform }}" = "windows" ]; then
             echo "ZIP_PATH=${{ steps.package-win.outputs.ZIP_PATH }}" >> $GITHUB_OUTPUT
+          elif [ "${{ matrix.platform }}" = "macos" ]; then
+            echo "ZIP_PATH=${{ steps.package-macos.outputs.ZIP_PATH }}" >> $GITHUB_OUTPUT
           else
-            echo "ZIP_PATH=${{ steps.package-unix.outputs.ZIP_PATH }}" >> $GITHUB_OUTPUT
+            echo "ZIP_PATH=${{ steps.package-linux.outputs.ZIP_PATH }}" >> $GITHUB_OUTPUT
           fi
 
       - uses: actions/upload-artifact@v4
