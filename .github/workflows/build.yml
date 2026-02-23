@@ -14,7 +14,16 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, platform: windows, artifact_suffix: windows-x64 }
+          - { os: macos-latest,   platform: macos,   artifact_suffix: macos-x64 }
+          - { os: ubuntu-latest,  platform: linux,   artifact_suffix: linux-x64 }
+
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,17 +40,40 @@ jobs:
             echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Install dependencies
+      # ── Dependencies ──────────────────────────────────────────────
+
+      - name: Install system dependencies (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-xlib xdotool xvfb scrot \
+            libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 \
+            libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
+            libxcb-xinerama0 libxcb-shape0 libxcb-cursor0 \
+            libegl1 libglib2.0-0
+
+      - name: Install Python dependencies
+        shell: bash
         run: |
           cd Codes
           pip install -r requirements.txt
           pip install pyautogui
-          # Install PyQt6 with pinned sub-packages to avoid DLL mismatches
           pip install PyQt6==6.6.1 PyQt6-Qt6==6.6.1 PyQt6-sip==13.6.0
-          # Verify PyQt6 installation
-          python -c "from PyQt6.QtCore import QCoreApplication; print('PyQt6 imported successfully')"
 
-      - name: Build with Nuitka
+      - name: Install Windows-specific dependencies
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: pip install -r Codes/requirements-windows.txt
+
+      - name: Verify PyQt6
+        shell: bash
+        run: python -c "from PyQt6.QtCore import QCoreApplication; print('PyQt6 OK')"
+
+      # ── Build ─────────────────────────────────────────────────────
+
+      - name: Build with Nuitka (Windows)
+        if: matrix.platform == 'windows'
         uses: Nuitka/Nuitka-Action@v1.4
         with:
           nuitka-version: "2.8.10"
@@ -57,8 +89,44 @@ jobs:
           noinclude-pytest-mode: nofollow
           noinclude-unittest-mode: nofollow
 
-      - name: Package distribution
-        id: package
+      - name: Build with Nuitka (macOS)
+        if: matrix.platform == 'macos'
+        uses: Nuitka/Nuitka-Action@v1.4
+        with:
+          nuitka-version: "2.8.10"
+          script-name: Codes/app.py
+          mode: standalone
+          enable-plugins: pyqt6
+          macos-create-app-bundle: true
+          include-data-dir: Codes/rules/=rules/
+          include-package-data: playwright
+          output-dir: build
+          output-file: AutoFillForm
+          noinclude-setuptools-mode: nofollow
+          noinclude-pytest-mode: nofollow
+          noinclude-unittest-mode: nofollow
+
+      - name: Build with Nuitka (Linux)
+        if: matrix.platform == 'linux'
+        uses: Nuitka/Nuitka-Action@v1.4
+        with:
+          nuitka-version: "2.8.10"
+          script-name: Codes/app.py
+          mode: standalone
+          enable-plugins: pyqt6
+          include-data-dir: Codes/rules/=rules/
+          include-package-data: playwright
+          output-dir: build
+          output-file: AutoFillForm
+          noinclude-setuptools-mode: nofollow
+          noinclude-pytest-mode: nofollow
+          noinclude-unittest-mode: nofollow
+
+      # ── Package ───────────────────────────────────────────────────
+
+      - name: Package distribution (Windows)
+        if: matrix.platform == 'windows'
+        id: package-win
         shell: pwsh
         run: |
           $distDir = Get-ChildItem -Path build -Directory -Filter "*.dist" |
@@ -72,31 +140,119 @@ jobs:
                            -DestinationPath "build/$zipName"
           echo "ZIP_PATH=build/$zipName" >> $env:GITHUB_OUTPUT
 
+      - name: Package distribution (macOS / Linux)
+        if: matrix.platform != 'windows'
+        id: package-unix
+        shell: bash
+        run: |
+          DIST_DIR=$(find build -maxdepth 1 -type d -name "*.dist" | head -1)
+          if [ -z "$DIST_DIR" ]; then
+            DIST_DIR=$(find build -maxdepth 1 -type d | tail -1)
+          fi
+          VERSION="${{ steps.version.outputs.version }}"
+          ZIP_NAME="AutoFillForm-${VERSION}-${{ matrix.artifact_suffix }}.zip"
+          cd "$DIST_DIR"
+          zip -r "../../build/$ZIP_NAME" .
+          cd ../..
+          echo "ZIP_PATH=build/$ZIP_NAME" >> $GITHUB_OUTPUT
+
+      - name: Set ZIP path
+        id: package
+        shell: bash
+        run: |
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            echo "ZIP_PATH=${{ steps.package-win.outputs.ZIP_PATH }}" >> $GITHUB_OUTPUT
+          else
+            echo "ZIP_PATH=${{ steps.package-unix.outputs.ZIP_PATH }}" >> $GITHUB_OUTPUT
+          fi
+
       - uses: actions/upload-artifact@v4
         with:
-          name: AutoFillForm-${{ steps.version.outputs.version }}-windows-x64
+          name: AutoFillForm-${{ steps.version.outputs.version }}-${{ matrix.artifact_suffix }}
           path: ${{ steps.package.outputs.ZIP_PATH }}
           retention-days: 30
 
+  # ════════════════════════════════════════════════════════════════════
+  # Release job — runs after all builds succeed
+  # ════════════════════════════════════════════════════════════════════
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history for git-cliff
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: AutoFillForm-*
+
+      - name: Collect zip files
+        id: zips
+        shell: bash
+        run: |
+          mkdir -p release_assets
+          find artifacts -name "*.zip" -exec cp {} release_assets/ \;
+          ls -lh release_assets/
+
+      - name: Generate release notes with git-cliff
+        id: notes
+        shell: bash
+        run: |
+          pip install git-cliff
+          NOTES=$(git-cliff --latest --strip all 2>/dev/null || echo "")
+          if [ -z "$NOTES" ]; then
+            NOTES="Release ${{ steps.version.outputs.version }}"
+          fi
+          # Write to file to preserve multiline
+          echo "$NOTES" > release_notes.md
+
+      - name: Build release body
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cp release_notes.md release_body.md
+          cat >> release_body.md <<EOF
+
+          ---
+
+          ### 下载
+          | 平台 | 文件 |
+          |------|------|
+          | Windows x64 | \`AutoFillForm-${VERSION}-windows-x64.zip\` |
+          | macOS x64   | \`AutoFillForm-${VERSION}-macos-x64.zip\` |
+          | Linux x64   | \`AutoFillForm-${VERSION}-linux-x64.zip\` |
+
+          ### 安装
+          1. 下载对应平台的 zip 文件并解压
+          2. **Windows**: 运行 \`AutoFillForm.exe\`
+          3. **macOS**: 运行 \`AutoFillForm.app\`
+          4. **Linux**: \`chmod +x AutoFillForm && ./AutoFillForm\`
+
+          ### 浏览器
+          应用支持自动检测系统浏览器（Edge / Chrome）。
+          如果系统没有 Edge 或 Chrome，需安装 Playwright 内置浏览器：
+          \`\`\`
+          pip install playwright==1.40.0
+          playwright install chromium
+          \`\`\`
+          EOF
+
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ steps.package.outputs.ZIP_PATH }}
+          files: release_assets/*
           name: AutoFillForm ${{ steps.version.outputs.version }}
-          body: |
-            ## AutoFillForm ${{ steps.version.outputs.version }}
-
-            ### 安装
-            1. 下载并解压 zip 文件
-            2. 运行 `AutoFillForm.exe`
-
-            ### 浏览器
-            应用支持自动检测系统浏览器（Edge / Chrome）。
-            如果系统没有 Edge 或 Chrome，需安装 Playwright 内置浏览器：
-            ```
-            pip install playwright==1.40.0
-            playwright install chromium
-            ```
+          body_path: release_body.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

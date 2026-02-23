@@ -1,0 +1,2 @@
+# AutoFillForm Windows-specific dependencies
+pywin32==306

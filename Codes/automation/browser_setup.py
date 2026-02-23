@@ -3,6 +3,7 @@ Browser configuration and setup with Playwright.
 Anti-detection measures for web automation.
 """
 import os
+import platform
 import subprocess
 import shutil
 from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page
@@ -15,22 +16,41 @@ class BrowserSetup:
     def _detect_channel():
         """Auto-detect available browser: prefer Edge, then Chrome, then built-in Chromium.
 
-        On Windows, Edge and Chrome are not on PATH, so we check standard
-        installation directories in addition to shutil.which().
+        Supports Windows, macOS, and Linux.
         """
-        edge_paths = [
-            os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
-            os.path.expandvars(r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"),
-        ]
-        if shutil.which("msedge") or any(os.path.isfile(p) for p in edge_paths):
-            return "msedge"
+        system = platform.system()
 
-        chrome_paths = [
-            os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
-            os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
-        ]
-        if shutil.which("chrome") or any(os.path.isfile(p) for p in chrome_paths):
-            return "chrome"
+        # --- Edge detection ---
+        if system == "Windows":
+            edge_paths = [
+                os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
+                os.path.expandvars(r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"),
+            ]
+            if shutil.which("msedge") or any(os.path.isfile(p) for p in edge_paths):
+                return "msedge"
+        elif system == "Darwin":
+            mac_edge = "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
+            if os.path.isfile(mac_edge) or shutil.which("msedge"):
+                return "msedge"
+        else:  # Linux
+            if shutil.which("microsoft-edge-stable") or shutil.which("microsoft-edge") or shutil.which("msedge"):
+                return "msedge"
+
+        # --- Chrome detection ---
+        if system == "Windows":
+            chrome_paths = [
+                os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+                os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+            ]
+            if shutil.which("chrome") or any(os.path.isfile(p) for p in chrome_paths):
+                return "chrome"
+        elif system == "Darwin":
+            mac_chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            if os.path.isfile(mac_chrome) or shutil.which("google-chrome"):
+                return "chrome"
+        else:  # Linux
+            if shutil.which("google-chrome") or shutil.which("google-chrome-stable") or shutil.which("chromium-browser") or shutil.which("chromium"):
+                return "chrome"
 
         # Fall back to Playwright built-in Chromium (no channel)
         return None

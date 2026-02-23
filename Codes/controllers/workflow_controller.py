@@ -36,8 +36,8 @@ class WorkflowController:
         self.page = None
 
         # DPI ratio
-        from tools.windows_resolution import get_windows_scale_ratio
-        self.ratio = get_windows_scale_ratio()
+        from tools.screen_resolution import get_scale_ratio
+        self.ratio = get_scale_ratio()
 
         # Load saved link if available
         saved_link = self.model.get_survey_link()
