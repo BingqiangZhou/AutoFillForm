@@ -97,8 +97,8 @@ jobs:
           script-name: Codes/app.py
           mode: app
           enable-plugins: pyside6
-          macos-app-mode: gui
-          macos-app-name: "AutoFillForm"
+          macos_app_mode: gui
+          macos_app_name: AutoFillForm
           include-data-dir: Codes/rules/=rules/
           include-package-data: playwright
           noinclude-data-files: "playwright/driver/node"
