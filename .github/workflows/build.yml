@@ -44,7 +44,7 @@ jobs:
       - name: Build with Nuitka
         uses: Nuitka/Nuitka-Action@v1.3
         with:
-          nuitka-version: stable
+          nuitka-version: main
           script-name: Codes/app.py
           mode: standalone
           enable-plugins: pyqt6
