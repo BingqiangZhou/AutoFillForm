@@ -36,16 +36,15 @@ jobs:
           cd Codes
           pip install -r requirements.txt
           pip install pyautogui
-          # Reinstall PyQt6 to ensure proper DLL installation
-          pip uninstall -y PyQt6 PyQt6-Qt6 PyQt6-sip
-          pip install PyQt6
+          # Install PyQt6 with specific version that works well in CI
+          pip install PyQt6==6.6.1
           # Verify PyQt6 installation
           python -c "import PyQt6; print('PyQt6 installed successfully')"
 
       - name: Build with Nuitka
         uses: Nuitka/Nuitka-Action@v1.3
         with:
-          nuitka-version: main
+          nuitka-version: stable
           script-name: Codes/app.py
           mode: standalone
           enable-plugins: pyqt6
@@ -54,6 +53,9 @@ jobs:
           include-package-data: playwright
           output-dir: build
           output-file: AutoFillForm.exe
+          noinclude-setuptools-mode: true
+          noinclude-pytest-mode: true
+          noinclude-unittest-mode: true
 
       - name: Package distribution
         id: package
