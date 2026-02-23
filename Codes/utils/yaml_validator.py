@@ -79,7 +79,7 @@ class YamlValidator:
                 return False, f"规则{i + 1}必须只有一个键值对"
 
             key = list(rule.keys())[0]
-            valid_types = ['radio_selection', 'multiple_selection', 'matrix_radio_selection', 'blank_filling']
+            valid_types = ['radio_selection', 'multiple_selection', 'matrix_radio_selection', 'blank_filling', 'dropdown_selection']
             if key not in valid_types:
                 return False, f"规则{i + 1}: 未知的问题类型 '{key}'"
 

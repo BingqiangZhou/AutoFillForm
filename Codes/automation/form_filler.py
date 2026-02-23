@@ -110,6 +110,19 @@ class FormFiller:
                 page.locator(css).fill(text_list[j])
                 break
 
+    def dropdown_selection(self, page, probabilities, question_index):
+        """Handle dropdown (select) questions with weighted probabilities."""
+        total = sum(probabilities)
+        rand = random.randint(1, total)
+        cumulative = 0
+        for i, prob in enumerate(probabilities):
+            cumulative += prob
+            if rand <= cumulative:
+                # WJX 下拉框 option value 从 1 开始
+                css = f"#q{question_index}"
+                page.locator(css).select_option(value=str(i + 1))
+                break
+
     def fill_questions(self, page, question_infos, delay=0.2):
         """
         Fill all questions based on the configuration.
@@ -133,6 +146,8 @@ class FormFiller:
                     self.matrix_radio_selection(page, value, index + 1)
                 elif key == "blank_filling":
                     self.blank_filling(page, value, index + 1)
+                elif key == "dropdown_selection":
+                    self.dropdown_selection(page, value, index + 1)
                 else:
                     self.log(f"Unknown question type: {key}")
                 time.sleep(delay)

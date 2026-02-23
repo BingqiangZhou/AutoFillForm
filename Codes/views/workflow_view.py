@@ -170,7 +170,7 @@ class WorkflowView(QWidget):
 
         type_to_rule = {
             '3': 'radio_selection',
-            '7': 'radio_selection',
+            '7': 'dropdown_selection',
             '4': 'multiple_selection',
             '6': 'matrix_radio_selection',
             '1': 'blank_filling',
@@ -197,7 +197,7 @@ class WorkflowView(QWidget):
                 'rule_key': rule_key
             })
 
-            if rule_key in ('radio_selection', 'multiple_selection'):
+            if rule_key in ('radio_selection', 'multiple_selection', 'dropdown_selection'):
                 options = q.get('options', [])
                 count = len(options)
                 for idx, opt_text in enumerate(options):
@@ -209,7 +209,7 @@ class WorkflowView(QWidget):
                     spinbox = QSpinBox()
                     spinbox.setRange(0, 100)
                     spinbox.setSuffix("%")
-                    if rule_key == 'radio_selection' and count > 0:
+                    if rule_key in ('radio_selection', 'dropdown_selection') and count > 0:
                         base = 100 // count
                         rem = 100 % count
                         spinbox.setValue(base + (1 if idx < rem else 0))
@@ -297,7 +297,7 @@ class WorkflowView(QWidget):
                 continue
             rule_key = data.get('rule_key', '')
 
-            if rule_key in ('radio_selection', 'multiple_selection'):
+            if rule_key in ('radio_selection', 'multiple_selection', 'dropdown_selection'):
                 probs = []
                 for j in range(q_item.childCount()):
                     child = q_item.child(j)
@@ -350,7 +350,7 @@ class WorkflowView(QWidget):
                 continue
             rule_key = data.get('rule_key', '')
 
-            if rule_key in ('radio_selection', 'blank_filling'):
+            if rule_key in ('radio_selection', 'blank_filling', 'dropdown_selection'):
                 spinboxes = []
                 for j in range(q_item.childCount()):
                     child = q_item.child(j)

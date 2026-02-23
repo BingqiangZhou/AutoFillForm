@@ -138,8 +138,12 @@ class WorkflowController:
 
                 elif q_type == '7':
                     options = []
-                    for option in div.find('select').find_all('option'):
-                        options.append(option.text.strip())
+                    select_el = div.find('select')
+                    if select_el:
+                        for option in select_el.find_all('option'):
+                            val = option.get('value', '').strip()
+                            if val:  # 过滤掉 value 为空的占位选项
+                                options.append(option.text.strip())
                     question['options'] = options
                     question['option_count'] = len(options)
 
