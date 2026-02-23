@@ -36,15 +36,15 @@ jobs:
           cd Codes
           pip install -r requirements.txt
           pip install pyautogui
-          # Install PyQt6 with specific version that works well in CI
-          pip install PyQt6==6.6.1
+          # Install PyQt6 with pinned sub-packages to avoid DLL mismatches
+          pip install PyQt6==6.6.1 PyQt6-Qt6==6.6.1 PyQt6-sip==13.6.0
           # Verify PyQt6 installation
-          python -c "import PyQt6; print('PyQt6 installed successfully')"
+          python -c "from PyQt6.QtCore import QCoreApplication; print('PyQt6 imported successfully')"
 
       - name: Build with Nuitka
-        uses: Nuitka/Nuitka-Action@v1.3
+        uses: Nuitka/Nuitka-Action@v1.4
         with:
-          nuitka-version: main
+          nuitka-version: "2.8.10"
           script-name: Codes/app.py
           mode: standalone
           enable-plugins: pyqt6
