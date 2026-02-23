@@ -12,8 +12,8 @@ from PyQt6.QtCore import QSettings
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from models import SurveyModel, RuleModel, HistoryModel
-from views import MainView, WorkflowView, RuleEditorView, HistoryView
-from controllers import MainController, WorkflowController, RuleEditorController, HistoryController
+from views import MainView, WorkflowView, HistoryView
+from controllers import MainController, WorkflowController, HistoryController
 from utils import GuiLogger
 
 
@@ -56,17 +56,10 @@ class AutoFillFormApp(QMainWindow):
         self.views = {
             'main': self.main_view,
             'workflow': WorkflowView(self.main_view.get_workflow_widget()),
-            'rule_editor': RuleEditorView(self.main_view.get_rule_editor_widget()),
             'history': HistoryView(self.main_view.get_history_widget())
         }
 
         # Create controllers
-        rule_editor_controller = RuleEditorController(
-            self.models['survey'],
-            self.views['rule_editor'],
-            self.models['rule']
-        )
-
         self.controllers = {
             'workflow': WorkflowController(
                 self.models['survey'],
@@ -75,7 +68,6 @@ class AutoFillFormApp(QMainWindow):
                 self.models['history'],
                 self.logger
             ),
-            'rule_editor': rule_editor_controller,
             'history': HistoryController(
                 self.models['survey'],
                 self.views['history'],

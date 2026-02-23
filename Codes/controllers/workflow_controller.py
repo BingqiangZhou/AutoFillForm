@@ -3,7 +3,6 @@ Workflow controller - merges analyze + fill into an integrated workflow.
 """
 import threading
 import time
-import yaml
 from bs4 import BeautifulSoup
 from tools.url_change_judge import wait_for_url_change
 from automation.form_filler import FormFiller
@@ -52,7 +51,6 @@ class WorkflowController:
         self.view.set_analyze_command(self.analyze_survey)
         self.view.set_start_command(self.start_fill)
         self.view.set_stop_command(self.stop_fill)
-        self.view.set_export_yaml_command(self.export_yaml)
         self.view.set_equalize_command(self.equalize_probabilities)
         self.view.set_reset_command(self.reset_tree)
 
@@ -99,6 +97,10 @@ class WorkflowController:
             self.view.append_log(f"分析失败: {error_msg}")
 
         finally:
+            try:
+                self._cleanup_analysis_browser()
+            except Exception:
+                pass
             self.view.after(0, lambda: self.view.analyze_button.setEnabled(True))
             self.view.set_status("就绪")
 
@@ -209,9 +211,11 @@ class WorkflowController:
         # Set up logger callback
         self.logger.set_gui_callback(self.log_callback)
 
-        # Create history session
+        # Create history session with parsed questions and rules
         self.current_session_id = self.history_model.add_session(
-            "workflow", url, fill_count, "running"
+            "workflow", url, fill_count, "running",
+            parsed_questions=self.parsed_questions,
+            rules=rules,
         )
 
         # Start filling in background thread
@@ -362,32 +366,21 @@ class WorkflowController:
                 pass
             self.analysis_browser = None
 
-    # --- Export ---
+    # --- Restore ---
 
-    def export_yaml(self):
-        """Export the current tree configuration as a YAML rule file."""
-        rules = self.view.build_rules_from_tree()
-        if not rules:
-            self.view.show_info("提示", "请先分析问卷并配置规则")
-            return
+    def restore_session(self, session):
+        """Restore a saved session's survey configuration into the workflow."""
+        parsed_questions = session.get("parsed_questions")
+        rules = session.get("rules")
+        url = session.get("url", "")
 
-        url = self.view.get_survey_link()
-        fill_count = self.view.get_fill_count()
+        if url:
+            self.view.link_edit.setText(url)
+            self.model.set_survey_link(url)
 
-        template = {
-            'url': url,
-            'number_of_questionnaires_to_be_filled_out': fill_count,
-            'rules': rules
-        }
-
-        file_path = self.view.ask_to_save_yaml()
-        if file_path:
-            try:
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    yaml.dump(template, f, allow_unicode=True, default_flow_style=False)
-                self.view.show_info("导出成功", f"YAML规则已保存到:\n{file_path}")
-            except Exception as e:
-                self.view.show_error("导出失败", f"保存文件时出错:\n{e}")
+        self.parsed_questions = parsed_questions
+        self.view.populate_tree(parsed_questions, rules)
+        self.view.append_log(f"已恢复会话 {session.get('id', '')} 的问卷配置")
 
     # --- Tree helpers ---
 

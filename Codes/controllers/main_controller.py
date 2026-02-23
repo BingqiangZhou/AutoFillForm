@@ -23,44 +23,18 @@ class MainController:
         self.views = views
         self.controllers = controllers
 
-        self.setup_menu_handlers()
+        self.setup_cross_controller_wiring()
 
-    def setup_menu_handlers(self):
-        """Set up menu bar handlers."""
-        main_view = self.views['main']
+    def setup_cross_controller_wiring(self):
+        """Wire cross-controller callbacks."""
+        def on_restore_session(session):
+            self.controllers['workflow'].restore_session(session)
+            self.views['main'].switch_to_tab(0)  # Switch to workflow tab
 
-        def new_rule():
-            self.controllers['rule_editor'].new_rule()
-            main_view.switch_to_tab(1)  # Rule editor tab
-
-        def export_yaml():
-            self.controllers['workflow'].export_yaml()
-
-        def export_history():
-            self.controllers['history'].export_selected()
-
-        def clear_history():
-            self.controllers['history'].clear_all_history()
-
-        # Connect handlers to main view
-        main_view.set_menu_handler("new_rule", new_rule)
-        main_view.set_menu_handler("export_yaml", export_yaml)
-        main_view.set_menu_handler("export_history", export_history)
-        main_view.set_menu_handler("clear_history", clear_history)
+        self.controllers['history'].set_restore_callback(on_restore_session)
 
     def on_closing(self):
         """Handle window closing event."""
-        # Check for unsaved changes in rule editor
-        if self.controllers['rule_editor'].has_unsaved_changes():
-            reply = QMessageBox.question(
-                None,
-                "退出确认",
-                "规则编辑器有未保存的更改，确定要退出吗？",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
-            if reply == QMessageBox.StandardButton.No:
-                return
-
         # Stop any running fills
         if self.controllers['workflow'].check_is_running():
             reply = QMessageBox.question(

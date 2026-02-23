@@ -21,6 +21,7 @@ class HistoryController:
         self.model = model
         self.view = view
         self.history_model = history_model
+        self._restore_callback = None
 
         # Setup view callbacks
         self.setup_view_callbacks()
@@ -37,6 +38,7 @@ class HistoryController:
         self.view.set_button_command("export", self.export_selected)
         self.view.set_button_command("clear", self.clear_all_history)
         self.view.set_button_command("view_logs", self.view_selected_logs)
+        self.view.set_restore_command(self.restore_by_id)
 
     def refresh_history(self):
         """Refresh the history display."""
@@ -114,3 +116,29 @@ class HistoryController:
     def has_unsaved_changes(self):
         """Return False - history controller doesn't have persistent state."""
         return False
+
+    def set_restore_callback(self, callback):
+        """Store a callback to be invoked when restoring a session.
+
+        Args:
+            callback: Function that accepts a session dict.
+        """
+        self._restore_callback = callback
+
+    def restore_by_id(self, session_id):
+        """Restore a session's survey configuration by session ID.
+
+        Args:
+            session_id (str): The session ID to restore.
+        """
+        session = self.history_model.get_session(session_id)
+        if not session:
+            self.view.show_error("错误", "未找到该会话")
+            return
+
+        if not session.get("parsed_questions"):
+            self.view.show_error("错误", "该会话没有保存的问卷数据，无法恢复")
+            return
+
+        if self._restore_callback:
+            self._restore_callback(session)

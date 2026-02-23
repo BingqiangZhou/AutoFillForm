@@ -3,7 +3,7 @@ Workflow view - integrated analyze + configure + fill workflow.
 """
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QLineEdit, QSpinBox, QPushButton, QProgressBar,
-                             QTextEdit, QFileDialog, QMessageBox, QGroupBox,
+                             QTextEdit, QMessageBox, QGroupBox,
                              QTreeWidget, QTreeWidgetItem, QHeaderView)
 from PyQt6.QtCore import pyqtSignal, QObject, QMutex, QMutexLocker, Qt
 from PyQt6.QtGui import QFont
@@ -71,9 +71,6 @@ class WorkflowView(QWidget):
 
         # Toolbar
         toolbar_layout = QHBoxLayout()
-        self.export_yaml_button = QPushButton("导出YAML")
-        self.export_yaml_button.setFixedWidth(100)
-        toolbar_layout.addWidget(self.export_yaml_button)
         self.equalize_button = QPushButton("均分概率")
         self.equalize_button.setFixedWidth(100)
         toolbar_layout.addWidget(self.equalize_button)
@@ -142,9 +139,6 @@ class WorkflowView(QWidget):
     def set_stop_command(self, command):
         self.stop_button.clicked.connect(command)
 
-    def set_export_yaml_command(self, command):
-        self.export_yaml_button.clicked.connect(command)
-
     def set_equalize_command(self, command):
         self.equalize_button.clicked.connect(command)
 
@@ -164,8 +158,14 @@ class WorkflowView(QWidget):
 
     # --- Tree methods ---
 
-    def populate_tree(self, parsed_questions):
-        """Populate the tree widget with parsed question data."""
+    def populate_tree(self, parsed_questions, rules=None):
+        """Populate the tree widget with parsed question data.
+
+        Args:
+            parsed_questions: List of parsed question dicts.
+            rules: Optional list of rule dicts with saved probabilities.
+                   When provided, restores saved probabilities instead of defaults.
+        """
         self.clear_tree()
 
         type_to_rule = {
@@ -176,6 +176,8 @@ class WorkflowView(QWidget):
             '1': 'blank_filling',
         }
 
+        rule_index = 0  # Tracks position in rules list
+
         for q in parsed_questions:
             topic = q.get('topic', '?')
             q_type_code = q.get('type_code', '')
@@ -185,6 +187,12 @@ class WorkflowView(QWidget):
 
             if not rule_key:
                 continue
+
+            # Get saved rule for this question if available
+            saved_rule = None
+            if rules and rule_index < len(rules):
+                saved_rule = rules[rule_index]
+            rule_index += 1
 
             # Create question-level item
             q_item = QTreeWidgetItem(self.tree)
@@ -200,6 +208,12 @@ class WorkflowView(QWidget):
             if rule_key in ('radio_selection', 'multiple_selection', 'dropdown_selection'):
                 options = q.get('options', [])
                 count = len(options)
+
+                # Extract saved probabilities if available
+                saved_probs = None
+                if saved_rule and rule_key in saved_rule:
+                    saved_probs = saved_rule[rule_key]
+
                 for idx, opt_text in enumerate(options):
                     opt_item = QTreeWidgetItem(q_item)
                     opt_item.setText(0, f"  选项{idx + 1}")
@@ -209,7 +223,10 @@ class WorkflowView(QWidget):
                     spinbox = QSpinBox()
                     spinbox.setRange(0, 100)
                     spinbox.setSuffix("%")
-                    if rule_key in ('radio_selection', 'dropdown_selection') and count > 0:
+
+                    if saved_probs and idx < len(saved_probs):
+                        spinbox.setValue(saved_probs[idx])
+                    elif rule_key in ('radio_selection', 'dropdown_selection') and count > 0:
                         base = 100 // count
                         rem = 100 % count
                         spinbox.setValue(base + (1 if idx < rem else 0))
@@ -219,6 +236,12 @@ class WorkflowView(QWidget):
 
             elif rule_key == 'matrix_radio_selection':
                 sub_questions = q.get('sub_questions', [])
+
+                # Extract saved sub-probabilities if available
+                saved_sub_probs = None
+                if saved_rule and 'matrix_radio_selection' in saved_rule:
+                    saved_sub_probs = saved_rule['matrix_radio_selection']
+
                 for si, sub_q in enumerate(sub_questions):
                     sub_item = QTreeWidgetItem(q_item)
                     sub_item.setText(0, f"  子题{si + 1}")
@@ -227,6 +250,12 @@ class WorkflowView(QWidget):
 
                     opts = sub_q.get('options', [])
                     opt_count = len(opts)
+
+                    # Get saved probs for this sub-question
+                    saved_opts = None
+                    if saved_sub_probs and si < len(saved_sub_probs):
+                        saved_opts = saved_sub_probs[si]
+
                     for oi, opt_val in enumerate(opts):
                         opt_item = QTreeWidgetItem(sub_item)
                         opt_item.setText(0, f"    选项{opt_val}")
@@ -235,7 +264,10 @@ class WorkflowView(QWidget):
                         spinbox = QSpinBox()
                         spinbox.setRange(0, 100)
                         spinbox.setSuffix("%")
-                        if opt_count > 0:
+
+                        if saved_opts and oi < len(saved_opts):
+                            spinbox.setValue(saved_opts[oi])
+                        elif opt_count > 0:
                             base = 100 // opt_count
                             rem = 100 % opt_count
                             spinbox.setValue(base + (1 if oi < rem else 0))
@@ -246,9 +278,21 @@ class WorkflowView(QWidget):
                     sub_item.setExpanded(True)
 
             elif rule_key == 'blank_filling':
-                # Add 2 default text entries
-                self._add_text_entry(q_item, '示例文本1', 50)
-                self._add_text_entry(q_item, '示例文本2', 50)
+                # Check for saved text entries
+                saved_texts = None
+                saved_probs = None
+                if saved_rule and 'blank_filling' in saved_rule:
+                    data = saved_rule['blank_filling']
+                    if isinstance(data, list) and len(data) == 2:
+                        saved_texts, saved_probs = data
+
+                if saved_texts and saved_probs:
+                    for ti, (text, prob) in enumerate(zip(saved_texts, saved_probs)):
+                        self._add_text_entry(q_item, text, prob)
+                else:
+                    # Default: 2 example entries
+                    self._add_text_entry(q_item, '示例文本1', 50)
+                    self._add_text_entry(q_item, '示例文本2', 50)
 
                 # Add "add text" button
                 add_item = QTreeWidgetItem(q_item)
@@ -447,13 +491,6 @@ class WorkflowView(QWidget):
 
     def show_error(self, title, message):
         QMessageBox.critical(self, title, message)
-
-    def ask_to_save_yaml(self):
-        file_path, _ = QFileDialog.getSaveFileName(
-            self, "导出YAML规则", "",
-            "YAML files (*.yaml);;All files (*.*)"
-        )
-        return file_path
 
     def after(self, ms, callback):
         """Schedule a callback on the main thread (compatibility helper)."""

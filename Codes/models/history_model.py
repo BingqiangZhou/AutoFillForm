@@ -44,7 +44,8 @@ class HistoryModel:
         except IOError as e:
             print(f"Error saving history: {e}")
 
-    def add_session(self, rule_file, url, fill_count, status="completed"):
+    def add_session(self, rule_file, url, fill_count, status="completed",
+                    parsed_questions=None, rules=None):
         """
         Add a new session to history.
 
@@ -53,6 +54,8 @@ class HistoryModel:
             url (str): Survey URL.
             fill_count (int): Number of forms filled.
             status (str): Session status (completed, stopped, error).
+            parsed_questions (list): Parsed question dicts from survey analysis.
+            rules (list): Rule dicts with configured probabilities.
 
         Returns:
             str: Session ID (timestamp).
@@ -65,7 +68,9 @@ class HistoryModel:
             "url": url,
             "fill_count": fill_count,
             "status": status,
-            "logs": []
+            "logs": [],
+            "parsed_questions": parsed_questions,
+            "rules": rules,
         }
         self.sessions.insert(0, session)  # Add to beginning
         self.save_sessions()

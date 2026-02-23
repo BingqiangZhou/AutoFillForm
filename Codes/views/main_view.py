@@ -1,8 +1,8 @@
 """
 Main view with tabbed interface - Migrated to PyQt6.
 """
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QTabWidget, QMenuBar,
-                             QMenu, QStatusBar, QLabel, QMessageBox)
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QTabWidget,
+                             QStatusBar, QLabel)
 from PyQt6.QtCore import Qt
 
 
@@ -30,81 +30,52 @@ class MainView(QWidget):
 
         # Create widgets for each tab
         self.workflow_widget = QWidget()
-        self.rule_editor_widget = QWidget()
         self.history_widget = QWidget()
+        self.about_widget = QWidget()
 
         # Add tabs to notebook
         self.notebook.addTab(self.workflow_widget, "问卷工作流")
-        self.notebook.addTab(self.rule_editor_widget, "规则编辑")
         self.notebook.addTab(self.history_widget, "历史记录")
+        self.notebook.addTab(self.about_widget, "关于")
 
-        # Set up menu bar and status bar on main window
-        self.setup_menu(main_window)
+        # Build about page content
+        self._setup_about_page()
+
+        # Set up status bar on main window
         self.setup_status_bar(main_window)
 
-    def setup_menu(self, main_window):
-        """Set up the menu bar."""
-        menubar = main_window.menuBar()
+    def _setup_about_page(self):
+        """Set up the about tab page content."""
+        layout = QVBoxLayout(self.about_widget)
+        layout.setContentsMargins(30, 30, 30, 30)
 
-        # File menu
-        file_menu = menubar.addMenu("文件")
-
-        action_new_rule = file_menu.addAction("新建规则")
-        action_new_rule.triggered.connect(lambda: self.on_menu_action("new_rule"))
-
-        action_export_yaml = file_menu.addAction("导出YAML")
-        action_export_yaml.triggered.connect(lambda: self.on_menu_action("export_yaml"))
-
-        file_menu.addSeparator()
-
-        action_exit = file_menu.addAction("退出")
-        action_exit.triggered.connect(main_window.close)
-
-        # Tools menu
-        tools_menu = menubar.addMenu("工具")
-
-        action_export = tools_menu.addAction("导出历史")
-        action_export.triggered.connect(lambda: self.on_menu_action("export_history"))
-
-        action_clear = tools_menu.addAction("清空历史")
-        action_clear.triggered.connect(lambda: self.on_menu_action("clear_history"))
-
-        # Help menu
-        help_menu = menubar.addMenu("帮助")
-
-        action_about = help_menu.addAction("关于")
-        action_about.triggered.connect(self.show_about)
-
-        # Store menu actions for controller to connect
-        self.menu_actions = {
-            "new_rule": action_new_rule,
-            "export_yaml": action_export_yaml,
-            "export_history": action_export,
-            "clear_history": action_clear
-        }
+        about_text = QLabel(
+            "<h2>AutoFillForm V5</h2>"
+            "<p>自动填写问卷工具</p>"
+            "<p>迁移自V4: Playwright + PyQt6</p>"
+            "<hr>"
+            "<h3>功能特性</h3>"
+            "<ul>"
+            "<li>问卷工作流 (分析+配置+填写)</li>"
+            "<li>多种题型支持 (单选、多选、矩阵、填空、下拉)</li>"
+            "<li>智能验证和滑块验证</li>"
+            "<li>历史记录与会话恢复</li>"
+            "</ul>"
+            "<h3>技术栈</h3>"
+            "<ul>"
+            "<li>Playwright (浏览器自动化)</li>"
+            "<li>PyQt6 (GUI框架)</li>"
+            "</ul>"
+        )
+        about_text.setWordWrap(True)
+        about_text.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(about_text)
 
     def setup_status_bar(self, main_window):
         """Set up the status bar."""
         self.status_bar = main_window.statusBar()
         self.status_label = QLabel("就绪")
         self.status_bar.addPermanentWidget(self.status_label, 1)
-
-    def on_menu_action(self, action):
-        """Handle menu actions - to be connected to controller."""
-        if hasattr(self, 'menu_handler') and action in self.menu_handler:
-            self.menu_handler[action]()
-
-    def set_menu_handler(self, action, handler):
-        """
-        Set a handler for a menu action.
-
-        Args:
-            action (str): Menu action identifier.
-            handler (callable): Handler function.
-        """
-        if not hasattr(self, 'menu_handler'):
-            self.menu_handler = {}
-        self.menu_handler[action] = handler
 
     def set_status(self, message):
         """
@@ -132,29 +103,7 @@ class MainView(QWidget):
         """Get the workflow tab widget."""
         return self.workflow_widget
 
-    def get_rule_editor_widget(self):
-        """Get the rule editor tab widget."""
-        return self.rule_editor_widget
-
     def get_history_widget(self):
         """Get the history tab widget."""
         return self.history_widget
 
-    def show_about(self):
-        """Show the about dialog."""
-        QMessageBox.information(
-            None,
-            "关于 AutoFillForm V5",
-            "AutoFillForm V5\n\n"
-            "自动填写问卷工具\n"
-            "迁移自V4: Playwright + PyQt6\n\n"
-            "功能特性:\n"
-            "• 问卷工作流 (分析+配置+填写)\n"
-            "• 多种题型支持 (单选、多选、矩阵、填空)\n"
-            "• 智能验证和滑块验证\n"
-            "• 规则编辑器\n"
-            "• 历史记录\n\n"
-            "技术栈:\n"
-            "• Playwright (浏览器自动化)\n"
-            "• PyQt6 (GUI框架)"
-        )

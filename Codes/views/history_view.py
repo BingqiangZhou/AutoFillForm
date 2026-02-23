@@ -64,8 +64,8 @@ class HistoryView(QWidget):
 
         # TreeWidget for history
         self.tree = QTreeWidget()
-        self.tree.setColumnCount(5)
-        self.tree.setHeaderLabels(["时间", "规则文件", "URL", "填写数量", "状态"])
+        self.tree.setColumnCount(6)
+        self.tree.setHeaderLabels(["时间", "规则文件", "URL", "填写数量", "状态", "操作"])
         self.tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.tree.setAlternatingRowColors(True)
 
@@ -76,6 +76,10 @@ class HistoryView(QWidget):
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
+        self.tree.setColumnWidth(5, 120)
+
+        self._restore_command = None
 
         self.tree.itemSelectionChanged.connect(self.on_selection_changed)
         history_layout.addWidget(self.tree)
@@ -100,7 +104,7 @@ class HistoryView(QWidget):
             "refresh": self.refresh_button,
             "export": self.export_button,
             "clear": self.clear_button,
-            "view_logs": self.view_logs_button
+            "view_logs": self.view_logs_button,
         }
         if button_name in button_map:
             button_map[button_name].clicked.connect(command)
@@ -143,6 +147,16 @@ class HistoryView(QWidget):
         # Store session_id as data
         item.setData(0, Qt.ItemDataRole.UserRole, session_id)
 
+        # Add restore button in the "操作" column, centered with fixed width
+        container = QWidget()
+        btn_layout = QHBoxLayout(container)
+        btn_layout.setContentsMargins(4, 2, 4, 2)
+        restore_btn = QPushButton("继续填写问卷")
+        restore_btn.setFixedWidth(100)
+        restore_btn.clicked.connect(lambda checked, sid=session_id: self._on_restore_clicked(sid))
+        btn_layout.addWidget(restore_btn, 0, Qt.AlignmentFlag.AlignCenter)
+        self.tree.setItemWidget(item, 5, container)
+
     def get_selected_session_id(self):
         """Get the selected session ID."""
         selected_items = self.tree.selectedItems()
@@ -159,6 +173,19 @@ class HistoryView(QWidget):
     def clear_logs(self):
         """Clear the log viewer."""
         self.log_text.clear()
+
+    def set_restore_command(self, command):
+        """Set the callback for per-row restore buttons.
+
+        Args:
+            command: Function that accepts a session_id string.
+        """
+        self._restore_command = command
+
+    def _on_restore_clicked(self, session_id):
+        """Handle a per-row restore button click."""
+        if self._restore_command:
+            self._restore_command(session_id)
 
     def on_selection_changed(self):
         """Handle selection change event - to be connected to controller."""
