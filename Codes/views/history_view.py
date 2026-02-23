@@ -67,7 +67,6 @@ class HistoryView(QWidget):
         self.tree.setColumnCount(6)
         self.tree.setHeaderLabels(["时间", "规则文件", "URL", "填写数量", "状态", "操作"])
         self.tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.tree.setAlternatingRowColors(True)
 
         # Set column widths
         header = self.tree.header()
@@ -78,6 +77,7 @@ class HistoryView(QWidget):
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
         self.tree.setColumnWidth(5, 120)
+        header.setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self._restore_command = None
 

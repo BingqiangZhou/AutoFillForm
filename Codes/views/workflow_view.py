@@ -66,6 +66,7 @@ class WorkflowView(QWidget):
         self.tree.setColumnWidth(0, 70)
         self.tree.setColumnWidth(1, 100)
         self.tree.setColumnWidth(3, 120)
+        header.setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
         self.tree.setMinimumHeight(200)
         tree_layout.addWidget(self.tree)
 
