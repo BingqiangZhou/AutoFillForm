@@ -12,3 +12,9 @@ python-exe-unpacker/
 *.pyc
 Codes/history/sessions.json
 Codes/history/survey_link.txt
+
+# Nuitka build artifacts
+build/
+*.build/
+*.dist/
+*.onefile-build/
