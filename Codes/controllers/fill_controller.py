@@ -14,7 +14,7 @@ from automation.browser_setup import BrowserSetup
 class FillController:
     """Controller for form filling operations using Playwright."""
 
-    def __init__(self, model, view, rule_model, history_model, logger):
+    def __init__(self, model, view, rule_model, history_model, logger, rule_editor_controller=None):
         """
         Initialize the fill controller.
 
@@ -24,12 +24,14 @@ class FillController:
             rule_model: RuleModel instance.
             history_model: HistoryModel instance.
             logger: GuiLogger instance.
+            rule_editor_controller: RuleEditorController instance (optional).
         """
         self.model = model
         self.view = view
         self.rule_model = rule_model
         self.history_model = history_model
         self.logger = logger
+        self.rule_editor_controller = rule_editor_controller
 
         # State
         self.is_running = False
@@ -70,6 +72,30 @@ class FillController:
             self.view.set_fill_count(self.rule_model.get_rule_fill_count())
             self.model.set_last_rule_file(file_name)
             self.logger.info(f"已加载规则文件: {file_name}")
+
+            # Also load the rule content into the rule editor for viewing/editing
+            if self.rule_editor_controller:
+                import os
+                file_path = os.path.join(self.rule_model.get_rules_dir(), file_name)
+                self.logger.info(f"Loading rule content from: {file_path}")
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    self.logger.info(f"Content length: {len(content)} chars, {len(content.splitlines())} lines")
+
+                    # Use the view's proper method to set content
+                    self.rule_editor_controller.view.set_content(content)
+
+                    # Update file info using internal attributes (needed for display)
+                    self.rule_editor_controller.view._current_file = file_path
+                    self.rule_editor_controller.view.file_label.setText(file_path)
+
+                    self.logger.info("Rule content loaded into editor successfully")
+                except Exception as e:
+                    import traceback
+                    self.logger.error(f"无法加载规则到编辑器: {e}")
+                    traceback.print_exc()
+
             return True
         else:
             self.view.show_error("加载失败", f"无法加载规则文件: {file_name}")

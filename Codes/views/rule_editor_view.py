@@ -6,7 +6,8 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QFileDialog, QMessageBox, QFrame, QSplitter)
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import (QFont, QTextCharFormat, QColor, QSyntaxHighlighter,
-                         QTextDocument, QPainter, QTextCursor, QTextFormat)
+                         QTextDocument, QPainter, QTextCursor, QTextFormat,
+                         QTextBlock, QPaintEvent)
 
 
 class YamlSyntaxHighlighter(QSyntaxHighlighter):
@@ -31,7 +32,7 @@ class YamlSyntaxHighlighter(QSyntaxHighlighter):
 
         # Check for comments
         if '#' in text:
-            comment_pos = text.indexOf('#')
+            comment_pos = text.find('#')
             # Check if # is inside a string (escaped or quoted)
             in_string = False
             escape_next = False
@@ -50,37 +51,22 @@ class YamlSyntaxHighlighter(QSyntaxHighlighter):
                 text = text[:comment_pos]  # Only process text before comment
 
         # Check for key: value pairs
-        colon_pos = text.indexOf(':')
+        colon_pos = text.find(':')
         if colon_pos > 0:
             # Highlight key
             key = text[:colon_pos].strip()
             if key:
-                self.setFormat(text.indexOf(key), len(key), key_format)
+                key_pos = text.find(key)
+                self.setFormat(key_pos, len(key), key_format)
 
             # Highlight value (after colon)
             value_start = colon_pos + 1
             if value_start < len(text):
                 value = text[value_start:].strip()
                 if value and value not in ('|', '>', '-', '---'):
-                    value_pos = text.indexOf(value, value_start)
+                    value_pos = text.find(value, value_start)
                     if value_pos >= 0:
                         self.setFormat(value_pos, len(value), value_format)
-
-
-class LineNumberArea(QWidget):
-    """Line numbers sidebar widget."""
-
-    def __init__(self, editor):
-        super().__init__(editor)
-        self.editor = editor
-
-    def sizeHint(self):
-        """Return the recommended size."""
-        return self.editor.line_number_area_width(), 0
-
-    def paintEvent(self, event):
-        """Paint the line numbers."""
-        self.editor.line_number_area_paint_event(event)
 
 
 class YamlEditor(QPlainTextEdit):
@@ -88,92 +74,11 @@ class YamlEditor(QPlainTextEdit):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.line_number_area = LineNumberArea(self)
-        self.blockCountChanged.connect(self.update_line_number_area_width)
-        self.updateRequest.connect(self.update_line_number_area)
-        self.cursorPositionChanged.connect(self.highlight_current_line)
-
         self.setFont(QFont("Consolas", 10))
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
 
-        self.update_line_number_area_width(0)
-        self.highlight_current_line()
 
-    def line_number_area_width(self):
-        """Calculate the width needed for line numbers."""
-        digits = 1
-        max_value = max(1, self.blockCount())
-        while max_value >= 10:
-            max_value /= 10
-            digits += 1
-        space = 3 + digits * self.fontMetrics().horizontalAdvance('9')
-        return space
-
-    def update_line_number_area_width(self, _):
-        """Update the line number area width."""
-        self.setViewportMargins(self.line_number_area_width(), 0, 0, 0)
-
-    def update_line_number_area(self, rect, dy):
-        """Update the line number area."""
-        if dy:
-            self.line_number_area.scroll(0, dy)
-        else:
-            self.line_number_area.update(0, rect.y(),
-                                       self.line_number_area.width(),
-                                       rect.height())
-
-        if rect.contains(self.viewport().rect()):
-            self.update_line_number_area_width(0)
-
-    def resizeEvent(self, event):
-        """Handle resize event."""
-        super().resizeEvent(event)
-        cr = self.contentsRect()
-        self.line_number_area.setGeometry(
-            cr.left(), cr.top(),
-            self.line_number_area_width(), cr.height()
-        )
-
-    def line_number_area_paint_event(self, event):
-        """Paint the line numbers."""
-        painter = QPainter(self.line_number_area)
-        painter.fillRect(event.rect(), QColor("#f0f0f0"))
-
-        block = self.firstVisibleBlock()
-        block_number = block.blockNumber()
-        top = self.blockBoundingGeometry(block).translated(self.contentOffset()).top()
-        bottom = top + self.blockBoundingRect(block).height()
-
-        while block.isValid() and top <= event.rect().bottom():
-            if block.isVisible() and bottom >= event.rect().top():
-                number = str(block_number + 1)
-                painter.setPen(QColor("#666666"))
-                painter.drawText(0, int(top), self.line_number_area.width(),
-                               self.fontMetrics().height(), Qt.AlignmentFlag.AlignRight,
-                               number)
-
-            block = block.next()
-            top = bottom
-            bottom = top + self.blockBoundingRect(block).height()
-            block_number += 1
-
-    def highlight_current_line(self):
-        """Highlight the current line."""
-        extra_selections = []
-
-        if not self.isReadOnly():
-            selection = QTextEdit.ExtraSelection()
-            line_color = QColor QColor("#ffffcc")
-            selection.format.setBackground(line_color)
-            selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
-            selection.cursor = self.textCursor()
-            selection.cursor.clearSelection()
-            extra_selections.append(selection)
-
-        self.setExtraSelections(extra_selections)
-
-
-class RuleEditorView(QWidget):
+class RuleEditorView:
     """View for the YAML rule editor tab using PyQt6."""
 
     def __init__(self, parent_widget):
@@ -181,9 +86,9 @@ class RuleEditorView(QWidget):
         Initialize the rule editor view.
 
         Args:
-            parent_widget: Parent widget to contain this view.
+            parent_widget: Widget to set up with the editor UI.
         """
-        super().__init__(parent_widget)
+        self.widget = parent_widget
         self._current_file = None
         self._modified = False
         self.setup_ui()
@@ -200,7 +105,7 @@ class RuleEditorView(QWidget):
 
     def setup_ui(self):
         """Set up the UI components."""
-        layout = QVBoxLayout(self)
+        layout = QVBoxLayout(self.widget)
         layout.setContentsMargins(10, 10, 10, 10)
 
         # Top toolbar
@@ -252,10 +157,13 @@ class RuleEditorView(QWidget):
         layout.addLayout(info_layout)
 
         # Editor with line numbers
-        self.editor = YamlEditor()
+        self.editor = YamlEditor(self.widget)
         self.highlighter = YamlSyntaxHighlighter(self.editor.document())
         self.editor.textChanged.connect(self.on_text_changed)
         layout.addWidget(self.editor, 1)
+
+        # Set placeholder text
+        self.editor.setPlaceholderText("Open a YAML file to start editing...")
 
         # Status bar
         self.status_label = QLabel("就绪")
@@ -306,7 +214,7 @@ class RuleEditorView(QWidget):
         """Open a file."""
         if not file_path:
             file_path, _ = QFileDialog.getOpenFileName(
-                self,
+                self.widget,
                 "打开规则文件",
                 "",
                 "YAML files (*.yaml *.yml);;All files (*.*)"
@@ -322,7 +230,7 @@ class RuleEditorView(QWidget):
             self.file_label.setText(file_path)
             return True
         except Exception as e:
-            QMessageBox.critical(self, "打开文件错误", f"无法打开文件:\n{e}")
+            QMessageBox.critical(self.widget, "打开文件错误", f"无法打开文件:\n{e}")
             return False
 
     def save_file(self, file_path=None):
@@ -332,7 +240,7 @@ class RuleEditorView(QWidget):
                 file_path = self.current_file
             else:
                 file_path, _ = QFileDialog.getSaveFileName(
-                    self,
+                    self.widget,
                     "保存规则文件",
                     "",
                     "YAML files (*.yaml);;All files (*.*)"
@@ -349,13 +257,13 @@ class RuleEditorView(QWidget):
             self.file_label.setText(file_path)
             return True
         except Exception as e:
-            QMessageBox.critical(self, "保存文件错误", f"无法保存文件:\n{e}")
+            QMessageBox.critical(self.widget, "保存文件错误", f"无法保存文件:\n{e}")
             return False
 
     def confirm_discard(self):
         """Ask user to confirm discarding changes."""
         reply = QMessageBox.question(
-            self,
+            self.widget,
             "未保存的更改",
             "当前文件有未保存的更改，是否继续？",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
@@ -370,7 +278,7 @@ class RuleEditorView(QWidget):
         """Show validation result in status bar."""
         if is_valid:
             self.set_status("验证通过 - " + message)
-            QMessageBox.information(self, "验证结果", "YAML语法正确！")
+            QMessageBox.information(self.widget, "验证结果", "YAML语法正确！")
         else:
             self.set_status("验证失败 - " + message)
-            QMessageBox.critical(self, "验证结果", f"YAML语法错误:\n{message}")
+            QMessageBox.critical(self.widget, "验证结果", f"YAML语法错误:\n{message}")

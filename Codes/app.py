@@ -63,25 +63,28 @@ class AutoFillFormApp(QMainWindow):
             'history': HistoryView(self.main_view.get_history_widget())
         }
 
-        # Create controllers
+        # Create controllers (rule_editor first, as fill_controller needs it)
+        rule_editor_controller = RuleEditorController(
+            self.models['survey'],
+            self.views['rule_editor'],
+            self.models['rule']
+        )
+
         self.controllers = {
             'fill': FillController(
                 self.models['survey'],
                 self.views['fill'],
                 self.models['rule'],
                 self.models['history'],
-                self.logger
+                self.logger,
+                rule_editor_controller=rule_editor_controller
             ),
             'analyze': AnalyzeController(
                 self.models['survey'],
                 self.views['analyze'],
                 self.models['rule']
             ),
-            'rule_editor': RuleEditorController(
-                self.models['survey'],
-                self.views['rule_editor'],
-                self.models['rule']
-            ),
+            'rule_editor': rule_editor_controller,
             'history': HistoryController(
                 self.models['survey'],
                 self.views['history'],

@@ -189,3 +189,8 @@ class HistoryView(QWidget):
     def get_session_count(self):
         """Get the number of sessions in the history."""
         return self.tree.topLevelItemCount()
+
+    def set_status(self, message):
+        """Set the status bar message (for controller compatibility)."""
+        # Status is handled by the main window's status bar
+        pass
