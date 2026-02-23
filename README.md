@@ -1,5 +1,6 @@
 # AutoFillForm V5
 
+![Version](https://img.shields.io/badge/Version-5.0.1-brightgreen.svg)
 ![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)
 ![PyQt6](https://img.shields.io/badge/PyQt6-6.6.1-green.svg)
 ![Playwright](https://img.shields.io/badge/Playwright-1.40.0-orange.svg)
@@ -277,6 +278,17 @@ A: 可能原因：
 A: 目前部分验证码需要手动处理，程序会在需要时暂停等待用户操作。
 
 ## 版本历史
+
+### V5.0.1 (2026-02-23)
+
+**主要更新：**
+- [新增] 关于页面 GitHub Release 更新检查与下载功能
+- [新增] 跨平台支持 (Windows / macOS / Linux)
+- [新增] 跨平台 DPI 缩放检测 (`screen_resolution.py`)
+- [新增] macOS / Linux 浏览器自动检测
+- [优化] CI/CD 构建支持三平台矩阵 (Windows / macOS / Linux)
+- [优化] Release Notes 由 git-cliff 自动生成
+- [修复] cliff.toml 中 remote_url 指向错误仓库
 
 ### V5.0.0 (2025-02-23)
 

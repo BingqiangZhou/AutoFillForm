@@ -4,7 +4,7 @@ AutoFillForm - Version Information
 Centralized version management for the application.
 """
 
-__version__ = "5.0.0"
+__version__ = "5.0.1"
 __title__ = "AutoFillForm"
 __fullname__ = f"{__title__} {__version__}"
 
