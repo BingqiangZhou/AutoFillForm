@@ -10,6 +10,10 @@
 
 **AutoFillForm V5** 是一个基于 PySide6 和 Playwright 的智能问卷自动填写工具。通过 YAML 配置文件，您可以灵活地定义问卷填写规则，支持多种题型（单选、多选、矩阵、填空、下拉框），并可根据概率权重智能选择答案。
 
+### 界面预览
+
+![AutoFillForm 主界面](Images/python_dz4LC2HP8H.png)
+
 ### 技术特色
 
 - **现代化架构**: 从 V4 升级，迁移至 PySide6 + Playwright 技术栈
