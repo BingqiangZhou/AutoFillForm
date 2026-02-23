@@ -36,6 +36,8 @@ jobs:
           cd Codes
           pip install -r requirements.txt
           pip install pyautogui
+          # Verify PyQt6 installation
+          python -c "import PyQt6; print('PyQt6 installed successfully')"
 
       - name: Build with Nuitka
         uses: Nuitka/Nuitka-Action@v1.3
@@ -48,7 +50,7 @@ jobs:
           include-data-dir: Codes/rules/=rules/
           include-package-data: playwright
           output-dir: build
-          output-filename: AutoFillForm.exe
+          output-file: AutoFillForm.exe
 
       - name: Package distribution
         id: package
