@@ -87,7 +87,7 @@ class BrowserSetup:
                      None - use Playwright built-in Chromium
 
         Returns:
-            tuple: (browser, context, page) - Playwright browser instance, context, and page.
+            tuple: (playwright_instance, browser, context, page) - Playwright instance, browser, context, and page.
         """
         if channel == "auto":
             channel = BrowserSetup._detect_channel()
@@ -160,7 +160,7 @@ class BrowserSetup:
         page.set_default_timeout(10000)
         page.set_default_navigation_timeout(30000)
 
-        return browser, context, page
+        return playwright_instance, browser, context, page
 
     @staticmethod
     def setup_browser_for_fill(channel="auto"):
@@ -171,7 +171,7 @@ class BrowserSetup:
             channel: Browser channel to use (see setup_browser).
 
         Returns:
-            tuple: (browser, context, page) - Playwright browser instance, context, and page.
+            tuple: (playwright_instance, browser, context, page) - Playwright instance, browser, context, and page.
         """
         return BrowserSetup.setup_browser(headless=False, channel=channel)
 
@@ -181,6 +181,6 @@ class BrowserSetup:
         Setup browser for survey analysis (headless).
 
         Returns:
-            tuple: (browser, context, page) - Playwright browser instance, context, and page.
+            tuple: (playwright_instance, browser, context, page) - Playwright instance, browser, context, and page.
         """
         return BrowserSetup.setup_browser(headless=True)

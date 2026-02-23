@@ -21,6 +21,7 @@ class WorkflowController:
         self.logger = logger
 
         # Analysis state
+        self.analysis_playwright_instance = None
         self.analysis_browser = None
         self.analysis_context = None
         self.analysis_page = None
@@ -31,6 +32,7 @@ class WorkflowController:
         self.stop_flag = threading.Event()
         self.current_session_id = None
         self.current_rules = None
+        self.playwright_instance = None
         self.browser = None
         self.context = None
         self.page = None
@@ -76,7 +78,7 @@ class WorkflowController:
         """Worker thread for survey analysis with Playwright."""
         try:
             if self.analysis_page is None:
-                self.analysis_browser, self.analysis_context, self.analysis_page = \
+                self.analysis_playwright_instance, self.analysis_browser, self.analysis_context, self.analysis_page = \
                     BrowserSetup.setup_browser_for_analysis()
 
             self.analysis_page.goto(link, wait_until="domcontentloaded")
@@ -234,7 +236,7 @@ class WorkflowController:
             verification_handler = VerificationHandler(ratio=self.ratio)
 
             self.logger.info("正在打开浏览器...")
-            self.browser, self.context, self.page = BrowserSetup.setup_browser_for_fill()
+            self.playwright_instance, self.browser, self.context, self.page = BrowserSetup.setup_browser_for_fill()
 
             fill_form_num = 0
             window_title = None
@@ -343,6 +345,13 @@ class WorkflowController:
                 pass
             self.browser = None
 
+        if self.playwright_instance:
+            try:
+                self.playwright_instance.stop()
+            except:
+                pass
+            self.playwright_instance = None
+
     def _cleanup_analysis_browser(self):
         """Clean up analysis browser resources."""
         if self.analysis_page:
@@ -365,6 +374,13 @@ class WorkflowController:
             except:
                 pass
             self.analysis_browser = None
+
+        if self.analysis_playwright_instance:
+            try:
+                self.analysis_playwright_instance.stop()
+            except:
+                pass
+            self.analysis_playwright_instance = None
 
     # --- Restore ---
 
