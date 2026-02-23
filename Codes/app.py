@@ -1,7 +1,7 @@
 """
 AutoFillForm V5 - Main Entry Point
 
-Migrated from V4: Tkinter → PyQt6, Selenium → Playwright
+Migrated from V4: Tkinter -> PyQt6, Selenium -> Playwright
 """
 import os
 import sys
@@ -12,8 +12,8 @@ from PyQt6.QtCore import QSettings
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from models import SurveyModel, RuleModel, HistoryModel
-from views import MainView, FillView, AnalyzeView, RuleEditorView, HistoryView
-from controllers import MainController, FillController, AnalyzeController, RuleEditorController, HistoryController
+from views import MainView, WorkflowView, RuleEditorView, HistoryView
+from controllers import MainController, WorkflowController, RuleEditorController, HistoryController
 from utils import GuiLogger
 
 
@@ -24,7 +24,7 @@ class AutoFillFormApp(QMainWindow):
         """Initialize the application."""
         super().__init__()
         self.setWindowTitle("AutoFillForm V5")
-        self.resize(900, 650)
+        self.resize(900, 700)
 
         # QSettings for window geometry persistence
         self.settings = QSettings("AutoFillForm", "V5")
@@ -48,22 +48,19 @@ class AutoFillFormApp(QMainWindow):
             'history': HistoryModel(history_dir=os.path.join(self.script_dir, "history"))
         }
 
-        # Create main view
+        # Create main view and set as central widget
         self.main_view = MainView(self)
+        self.setCentralWidget(self.main_view)
 
         # Create sub-views
         self.views = {
             'main': self.main_view,
-            'fill': FillView(self.main_view.get_fill_widget()),
-            'analyze': AnalyzeView(
-                self.main_view.get_analyze_widget(),
-                initial_link=self.models['survey'].get_survey_link()
-            ),
+            'workflow': WorkflowView(self.main_view.get_workflow_widget()),
             'rule_editor': RuleEditorView(self.main_view.get_rule_editor_widget()),
             'history': HistoryView(self.main_view.get_history_widget())
         }
 
-        # Create controllers (rule_editor first, as fill_controller needs it)
+        # Create controllers
         rule_editor_controller = RuleEditorController(
             self.models['survey'],
             self.views['rule_editor'],
@@ -71,18 +68,12 @@ class AutoFillFormApp(QMainWindow):
         )
 
         self.controllers = {
-            'fill': FillController(
+            'workflow': WorkflowController(
                 self.models['survey'],
-                self.views['fill'],
+                self.views['workflow'],
                 self.models['rule'],
                 self.models['history'],
-                self.logger,
-                rule_editor_controller=rule_editor_controller
-            ),
-            'analyze': AnalyzeController(
-                self.models['survey'],
-                self.views['analyze'],
-                self.models['rule']
+                self.logger
             ),
             'rule_editor': rule_editor_controller,
             'history': HistoryController(
@@ -99,11 +90,6 @@ class AutoFillFormApp(QMainWindow):
             self.views,
             self.controllers
         )
-
-        # Load last rule file if available
-        last_rule = self.models['survey'].get_last_rule_file()
-        if last_rule:
-            self.controllers['fill'].load_rule_file(last_rule)
 
         # Set initial status
         self.main_view.set_status("就绪 - AutoFillForm V5")

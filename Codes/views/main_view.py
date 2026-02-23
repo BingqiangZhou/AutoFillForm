@@ -29,14 +29,12 @@ class MainView(QWidget):
         layout.addWidget(self.notebook)
 
         # Create widgets for each tab
-        self.fill_widget = QWidget()
-        self.analyze_widget = QWidget()
+        self.workflow_widget = QWidget()
         self.rule_editor_widget = QWidget()
         self.history_widget = QWidget()
 
         # Add tabs to notebook
-        self.notebook.addTab(self.fill_widget, "问卷填写")
-        self.notebook.addTab(self.analyze_widget, "问卷分析")
+        self.notebook.addTab(self.workflow_widget, "问卷工作流")
         self.notebook.addTab(self.rule_editor_widget, "规则编辑")
         self.notebook.addTab(self.history_widget, "历史记录")
 
@@ -51,11 +49,11 @@ class MainView(QWidget):
         # File menu
         file_menu = menubar.addMenu("文件")
 
-        action_select_rule = file_menu.addAction("选择规则文件")
-        action_select_rule.triggered.connect(lambda: self.on_menu_action("select_rule"))
-
         action_new_rule = file_menu.addAction("新建规则")
         action_new_rule.triggered.connect(lambda: self.on_menu_action("new_rule"))
+
+        action_export_yaml = file_menu.addAction("导出YAML")
+        action_export_yaml.triggered.connect(lambda: self.on_menu_action("export_yaml"))
 
         file_menu.addSeparator()
 
@@ -79,8 +77,8 @@ class MainView(QWidget):
 
         # Store menu actions for controller to connect
         self.menu_actions = {
-            "select_rule": action_select_rule,
             "new_rule": action_new_rule,
+            "export_yaml": action_export_yaml,
             "export_history": action_export,
             "clear_history": action_clear
         }
@@ -130,13 +128,9 @@ class MainView(QWidget):
         """
         self.notebook.setCurrentIndex(tab_index)
 
-    def get_fill_widget(self):
-        """Get the fill tab widget."""
-        return self.fill_widget
-
-    def get_analyze_widget(self):
-        """Get the analyze tab widget."""
-        return self.analyze_widget
+    def get_workflow_widget(self):
+        """Get the workflow tab widget."""
+        return self.workflow_widget
 
     def get_rule_editor_widget(self):
         """Get the rule editor tab widget."""
@@ -155,10 +149,9 @@ class MainView(QWidget):
             "自动填写问卷工具\n"
             "迁移自V4: Playwright + PyQt6\n\n"
             "功能特性:\n"
-            "• YAML规则配置\n"
+            "• 问卷工作流 (分析+配置+填写)\n"
             "• 多种题型支持 (单选、多选、矩阵、填空)\n"
             "• 智能验证和滑块验证\n"
-            "• 问卷分析\n"
             "• 规则编辑器\n"
             "• 历史记录\n\n"
             "技术栈:\n"

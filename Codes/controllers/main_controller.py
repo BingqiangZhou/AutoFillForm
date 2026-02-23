@@ -29,14 +29,12 @@ class MainController:
         """Set up menu bar handlers."""
         main_view = self.views['main']
 
-        # Define menu handlers
-        def select_rule():
-            self.controllers['rule_editor'].open_rule()
-            main_view.switch_to_tab(2)  # Switch to rule editor tab
-
         def new_rule():
             self.controllers['rule_editor'].new_rule()
-            main_view.switch_to_tab(2)
+            main_view.switch_to_tab(1)  # Rule editor tab
+
+        def export_yaml():
+            self.controllers['workflow'].export_yaml()
 
         def export_history():
             self.controllers['history'].export_selected()
@@ -44,17 +42,9 @@ class MainController:
         def clear_history():
             self.controllers['history'].clear_all_history()
 
-        # Store handlers for menu
-        self.menu_handlers = {
-            'select_rule': select_rule,
-            'new_rule': new_rule,
-            'export_history': export_history,
-            'clear_history': clear_history,
-        }
-
         # Connect handlers to main view
-        main_view.set_menu_handler("select_rule", select_rule)
         main_view.set_menu_handler("new_rule", new_rule)
+        main_view.set_menu_handler("export_yaml", export_yaml)
         main_view.set_menu_handler("export_history", export_history)
         main_view.set_menu_handler("clear_history", clear_history)
 
@@ -72,7 +62,7 @@ class MainController:
                 return
 
         # Stop any running fills
-        if self.controllers['fill'].check_is_running():
+        if self.controllers['workflow'].check_is_running():
             reply = QMessageBox.question(
                 None,
                 "退出确认",
@@ -81,13 +71,13 @@ class MainController:
             )
             if reply == QMessageBox.StandardButton.No:
                 return
-            self.controllers['fill'].stop_fill()
+            self.controllers['workflow'].stop_fill()
 
         # Save configuration
         self.models['survey'].save_config_to_file()
 
-        # Clean up analyze controller
-        self.controllers['analyze'].cleanup()
+        # Clean up workflow controller
+        self.controllers['workflow'].cleanup()
 
     def get_controller(self, name):
         """Get a sub-controller by name."""

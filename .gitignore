@@ -10,3 +10,5 @@ python-exe-unpacker/
 *.zip
 *.exe
 *.pyc
+Codes/history/sessions.json
+Codes/history/survey_link.txt
