@@ -10,7 +10,7 @@
 
 ### 界面预览
 
-![AutoFillForm 主界面](Images/python_dz4LC2HP8H.png)
+![AutoFillForm 主界面](Images/SmzDGC6ZnC.png)
 
 ### 技术特色
 
