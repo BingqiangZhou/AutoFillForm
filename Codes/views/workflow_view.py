@@ -37,16 +37,19 @@ class WorkflowView(QWidget):
     def setup_ui(self):
         """Set up the UI components."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
 
         # Step 1: URL Input
         url_group = QGroupBox("Step 1: 问卷链接")
         url_layout = QHBoxLayout(url_group)
+        url_layout.setSpacing(10)
         url_layout.addWidget(QLabel("链接:"))
         self.link_edit = QLineEdit()
         self.link_edit.setPlaceholderText("请输入问卷链接...")
         url_layout.addWidget(self.link_edit)
         self.analyze_button = QPushButton("分析问卷")
+        self.analyze_button.setProperty("class", "primary")
         url_layout.addWidget(self.analyze_button)
         layout.addWidget(url_group)
 
@@ -95,16 +98,20 @@ class WorkflowView(QWidget):
         controls_layout.addWidget(self.count_spinbox)
         controls_layout.addStretch()
         self.start_button = QPushButton("开始填写")
+        self.start_button.setProperty("class", "success")
         controls_layout.addWidget(self.start_button)
         self.stop_button = QPushButton("停止")
+        self.stop_button.setProperty("class", "danger")
         self.stop_button.setEnabled(False)
         controls_layout.addWidget(self.stop_button)
         fill_layout.addLayout(controls_layout)
 
         progress_layout = QHBoxLayout()
+        progress_layout.setSpacing(12)
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
+        self.progress_bar.setFormat("%p%")
         progress_layout.addWidget(self.progress_bar)
         self.status_label = QLabel("就绪")
         progress_layout.addWidget(self.status_label)

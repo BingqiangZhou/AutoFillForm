@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                               QPushButton, QTextEdit, QFileDialog, QMessageBox,
                               QGroupBox, QTreeWidget, QTreeWidgetItem,
                               QAbstractItemView, QHeaderView)
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
 
 
@@ -31,7 +31,8 @@ class HistoryView(QWidget):
     def setup_ui(self):
         """Set up the UI components."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
 
         # Toolbar
         toolbar_layout = QHBoxLayout()
@@ -42,17 +43,19 @@ class HistoryView(QWidget):
         toolbar_layout.addWidget(self.refresh_button)
 
         self.export_button = QPushButton("导出选中")
-        self.export_button.setFixedWidth(80)
+        self.export_button.setFixedWidth(100)
         toolbar_layout.addWidget(self.export_button)
 
         self.clear_button = QPushButton("清空历史")
-        self.clear_button.setFixedWidth(80)
+        self.clear_button.setProperty("class", "danger")
+        self.clear_button.setFixedWidth(100)
         toolbar_layout.addWidget(self.clear_button)
 
         toolbar_layout.addSpacing(20)
 
         self.view_logs_button = QPushButton("查看日志")
-        self.view_logs_button.setFixedWidth(80)
+        self.view_logs_button.setProperty("class", "primary")
+        self.view_logs_button.setFixedWidth(100)
         toolbar_layout.addWidget(self.view_logs_button)
 
         toolbar_layout.addStretch()
@@ -76,7 +79,7 @@ class HistoryView(QWidget):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
-        self.tree.setColumnWidth(5, 120)
+        self.tree.setColumnWidth(5, 160)
         header.setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self._restore_command = None
@@ -147,12 +150,34 @@ class HistoryView(QWidget):
         # Store session_id as data
         item.setData(0, Qt.ItemDataRole.UserRole, session_id)
 
+        # Set row height to fit button comfortably
+        item.setSizeHint(0, QSize(0, 32))
+
         # Add restore button in the "操作" column, centered with fixed width
         container = QWidget()
+        container.setStyleSheet("background: transparent;")
         btn_layout = QHBoxLayout(container)
         btn_layout.setContentsMargins(4, 2, 4, 2)
         restore_btn = QPushButton("继续填写问卷")
-        restore_btn.setFixedWidth(100)
+        restore_btn.setFixedWidth(110)
+        restore_btn.setFixedHeight(22)
+        restore_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #10B981;
+                color: #FFFFFF;
+                border: none;
+                border-radius: 4px;
+                font-weight: 600;
+                font-size: 11px;
+                padding: 2px 8px;
+            }
+            QPushButton:hover {
+                background-color: #059669;
+            }
+            QPushButton:pressed {
+                background-color: #047857;
+            }
+        """)
         restore_btn.clicked.connect(lambda checked, sid=session_id: self._on_restore_clicked(sid))
         btn_layout.addWidget(restore_btn, 0, Qt.AlignmentFlag.AlignCenter)
         self.tree.setItemWidget(item, 5, container)

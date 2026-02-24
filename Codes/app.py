@@ -120,9 +120,16 @@ class AutoFillFormApp(QMainWindow):
 
 def main():
     """Main entry point."""
+    # Suppress harmless Qt DPI awareness warning on Windows
+    os.environ.setdefault("QT_LOGGING_RULES", "qt.qpa.window=false")
+
     app = QApplication(sys.argv)
     app.setApplicationName("AutoFillForm")
     app.setOrganizationName("AutoFillForm")
+
+    # Apply global dark theme
+    from views.styles import get_global_stylesheet
+    app.setStyleSheet(get_global_stylesheet())
 
     window = AutoFillFormApp()
     window.run()

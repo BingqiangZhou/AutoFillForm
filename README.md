@@ -2,8 +2,6 @@
 
 ![Version](https://img.shields.io/badge/Version-5.0.3-brightgreen.svg)
 ![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)
-![PySide6](https://img.shields.io/badge/PySide6-6.6.1-green.svg)
-![Playwright](https://img.shields.io/badge/Playwright-1.40.0-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## 项目简介

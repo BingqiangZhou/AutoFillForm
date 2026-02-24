@@ -107,6 +107,7 @@ class MainView(QWidget):
         # Check update row
         check_row = QHBoxLayout()
         self._check_btn = QPushButton("检查更新")
+        self._check_btn.setProperty("class", "primary")
         self._check_btn.setFixedWidth(120)
         self._check_btn.clicked.connect(self._on_check_update)
         check_row.addWidget(self._check_btn)
@@ -129,6 +130,7 @@ class MainView(QWidget):
         dl_layout.setContentsMargins(0, 0, 0, 0)
 
         self._download_btn = QPushButton("下载更新")
+        self._download_btn.setProperty("class", "success")
         self._download_btn.clicked.connect(self._on_download)
         dl_layout.addWidget(self._download_btn)
 
@@ -137,6 +139,7 @@ class MainView(QWidget):
         dl_layout.addWidget(self._open_browser_btn)
 
         self._cancel_btn = QPushButton("取消")
+        self._cancel_btn.setProperty("class", "danger")
         self._cancel_btn.clicked.connect(self._on_cancel_download)
         self._cancel_btn.setVisible(False)
         dl_layout.addWidget(self._cancel_btn)
