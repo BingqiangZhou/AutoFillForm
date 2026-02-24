@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [5.1.0](https://github.com/BingqiangZhou/AutoFillForm/compare/v5.0.3...v5.1.0) - 2026-02-24 ([📥](https://github.com/BingqiangZhou/AutoFillForm/releases/tag/v5.1.0))
+
+### 🎨 Styling
+
+- *(views)* Add global dark theme and modernize UI styling ([1b86667](https://github.com/BingqiangZhou/AutoFillForm/commit/1b866674d18dc3272d5c9eb5ad72c1198fe490ee))
+
+### 🚀 Features
+
+- *(views)* Add Markdown rendering for release notes in About page ([a99fbd9](https://github.com/BingqiangZhou/AutoFillForm/commit/a99fbd9c6e39ef3e5ac65aba37e1f0bc70e86e58))
+
+
+
 ## [5.0.3](https://github.com/BingqiangZhou/AutoFillForm/compare/v5.0.2...v5.0.3) - 2026-02-23 ([📥](https://github.com/BingqiangZhou/AutoFillForm/releases/tag/v5.0.3))
 
 ### 🎨 Styling

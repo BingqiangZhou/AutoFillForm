@@ -1,6 +1,6 @@
 # AutoFillForm V5
 
-![Version](https://img.shields.io/badge/Version-5.0.3-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-5.1.0-brightgreen.svg)
 ![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
@@ -280,6 +280,14 @@ A: 可能原因：
 A: 目前部分验证码需要手动处理，程序会在需要时暂停等待用户操作。
 
 ## 版本历史
+
+### V5.1.0 (2026-02-24)
+
+**主要更新：**
+- [样式] 全局暗色主题与现代化 UI 样式
+- [新增] 玻璃拟态加载动画，带旋转指示器
+- [新增] 按钮风格属性系统（primary/success/danger）
+- [功能] 关于页面 Markdown Release Notes 渲染
 
 ### V5.0.3 (2026-02-24)
 
