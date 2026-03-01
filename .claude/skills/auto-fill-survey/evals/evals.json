@@ -1,0 +1,26 @@
+{
+  "skill_name": "auto-fill-survey",
+  "evals": [
+    {
+      "id": 1,
+      "name": "basic-survey-with-url",
+      "prompt": "帮我填写这个问卷 https://www.wjx.cn/vm/example",
+      "expected_output": "Skill should analyze the survey structure, ask for configuration (fill count, probability strategy), and then proceed with filling.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "survey-with-count",
+      "prompt": "用这个工具填写10份问卷 https://www.wjx.cn/vm/example2",
+      "expected_output": "Skill should analyze survey, ask for probability configuration, and fill 10 times.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "casual-request",
+      "prompt": "我有一个问卷链接，能帮我批量填写吗？链接是 https://www.wjx.cn/vm/test",
+      "expected_output": "Skill should recognize this as a survey auto-fill request and proceed with analysis.",
+      "files": []
+    }
+  ]
+}
