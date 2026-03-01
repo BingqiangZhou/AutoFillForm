@@ -1,12 +1,23 @@
 ---
 name: auto-fill-survey
 description: 自动填写问卷。当用户提供问卷链接（如问卷星、腾讯问卷等），或提到"填写问卷"、"自动填表"、"批量填写"等相关需求时触发此技能。支持单选、多选、矩阵题、填空题、下拉框等所有题型，自动处理智能验证和滑块验证。
-compatibility: Requires Python 3.8+, Playwright, BeautifulSoup4, pyautogui, PyYAML
+compatibility: Requires conda environment 'pyTools' with Python 3.11+, Playwright, BeautifulSoup4, pyautogui
 ---
 
 # 自动填写问卷技能
 
 此技能基于 Playwright 和 BeautifulSoup 实现，能够自动分析问卷结构并批量填写。
+
+## Python 环境要求
+
+**必须使用 conda 的 pyTools 环境**。此技能依赖的库（Playwright、BeautifulSoup4、pyautogui）已安装在 pyTools 环境中。
+
+Python 路径: `D:/Softwares/miniconda3/envs/pyTools/python.exe`
+
+**执行 Python 代码时，始终使用此路径**：
+```bash
+D:/Softwares/miniconda3/envs/pyTools/python.exe <script>.py
+```
 
 ## 工作流程
 
@@ -107,27 +118,34 @@ rules:
 
 ### 步骤 4: 执行填写
 
-使用 Playwright 执行填写过程：
+使用技能 bundled script 中的 `SurveyAutoFiller` 类执行填写：
 
 ```python
-from automation.form_filler import FormFiller
-from automation.browser_setup import BrowserSetup
-from automation.verification import VerificationHandler
-from tools.screen_resolution import get_scale_ratio
+import sys
+sys.path.insert(0, '<skill-path>/scripts')
 
-# 设置浏览器（非无头模式，用户可看到进度）
-playwright_instance, browser, context, page = BrowserSetup.setup_browser_for_fill()
+from survey_auto_filler import SurveyAutoFiller
 
-# 创建填写器和验证处理器
-form_filler = FormFiller(log_callback=print)
-verification_handler = VerificationHandler(ratio=get_scale_ratio())
+# 创建填写器实例
+filler = SurveyAutoFiller(log_callback=print)
 
-# 循环填写
-for i in range(fill_count):
-    page.goto(survey_url, wait_until="domcontentloaded")
-    form_filler.fill_questions(page, question_infos, delay=0.2)
-    page.locator('.submitbtn').click()
-    # 处理验证...
+# 分析问卷
+questions = filler.analyze_survey(survey_url)
+print(filler.format_questions(questions))
+
+# 创建规则
+rules = filler.create_default_rules(questions)  # 或使用用户自定义规则
+
+# 执行填写
+result = filler.fill_survey(survey_url, rules, fill_count=5)
+
+if result['success']:
+    print(f"填写完成！成功: {result['filled_count']}/{result['total_count']}")
+```
+
+**重要**: 运行 Python 代码时，必须使用 pyTools 环境：
+```bash
+D:/Softwares/miniconda3/envs/pyTools/python.exe your_script.py
 ```
 
 ## 题型处理说明
@@ -266,14 +284,17 @@ locale='zh-CN'
 填写完成！成功填写 5/5 份问卷。
 ```
 
-## 依赖模块
+## Bundled Script
 
-技能使用以下模块（位于 Codes 目录）：
+技能包含一个 bundled script: `scripts/survey_auto_filler.py`
 
-- `automation/browser_setup.py` - 浏览器配置
-- `automation/form_filler.py` - 表单填写逻辑
-- `automation/verification.py` - 验证处理
-- `tools/screen_resolution.py` - DPI缩放比例
-- `tools/url_change_judge.py` - URL变化检测
+该脚本提供以下类：
+- `SurveyAnalyzer` - 分析问卷结构
+- `FormFiller` - 处理表单填写
+- `BrowserSetup` - 浏览器配置（反检测）
+- `SurveyAutoFiller` - 主工作流类
 
-使用时需要确保这些模块在 Python 路径中可访问。
+**使用时确保使用 pyTools 环境**：
+```bash
+D:/Softwares/miniconda3/envs/pyTools/python.exe scripts/survey_auto_filler.py <url> --count 5
+```
